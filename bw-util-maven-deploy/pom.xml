@@ -20,7 +20,6 @@
     <dependency>
       <groupId>org.bedework</groupId>
       <artifactId>bw-util-misc</artifactId>
-      <version>${project.version}</version>
     </dependency>
 
     <dependency>
