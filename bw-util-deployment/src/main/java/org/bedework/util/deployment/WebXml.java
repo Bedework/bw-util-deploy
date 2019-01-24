@@ -20,6 +20,7 @@ public class WebXml extends XmlFile {
                 final PropertiesChain props) throws Throwable {
     super(utils, webInf, "web.xml", false);
     this.props = props;
+    utils.dumpProps(props);
   }
 
   public void update() throws Throwable {

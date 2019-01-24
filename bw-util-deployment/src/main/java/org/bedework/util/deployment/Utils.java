@@ -500,12 +500,25 @@ public class Utils {
     return res;
   }
 
+  /** Return a Properties object containing all those properties that
+   * match the given prefix. The property name will have the prefix
+   * replaced by the new prefix.
+   *
+   * @param props source properties
+   */
+  public void dumpProps(final PropertiesChain props) {
+    for (final String pname: props.topNames()) {
+      debug("prop: " + pname + " = \"" +
+                    props.get(pname) + "\"");
+    }
+  }
+
   /** Delete any files on the given path that have a name part that
    * matches the split name. Allows us to remove old versions.
    *
    * @param dirPath the directory
    * @param sn the split name
-   * @throws Throwable
+   * @throws Throwable on any error
    */
   void deleteMatching(final String dirPath,
                              final SplitName sn) throws Throwable {
