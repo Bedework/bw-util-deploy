@@ -31,8 +31,8 @@
     <servlet-api.version>2.5</servlet-api.version>
 
 
-    <maven-plugin-annotations.version>3.4</maven-plugin-annotations.version>
-    <maven-plugin-api.version>3.0</maven-plugin-api.version>
+    <maven-plugin-annotations.version>3.6.0</maven-plugin-annotations.version>
+    <maven-plugin-api.version>3.6.1</maven-plugin-api.version>
   </properties>
 
   <organization>
