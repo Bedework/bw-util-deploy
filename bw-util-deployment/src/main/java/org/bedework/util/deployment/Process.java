@@ -2,7 +2,7 @@ package org.bedework.util.deployment;
 
 import org.bedework.util.dav.DavUtil;
 import org.bedework.util.dav.DavUtil.DavChild;
-import org.bedework.util.http.BasicHttpClient;
+import org.bedework.util.http.PooledHttpClient;
 import org.bedework.util.misc.Util;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -525,18 +525,20 @@ public class Process extends AbstractMojo {
    * @throws Throwable
    */
   private String getRemoteFiles(final String inUrl) throws Throwable {
-    final BasicHttpClient cl = new BasicHttpClient(30000);
+    PooledHttpClient cl = null;
 
     final Path downloadPath = getTempDirectory("bwdownload");
     final Path expandPath = getTempDirectory("bwexpand");
     final String sourceEars = expandPath.toAbsolutePath().toString();
 
     try {
+      final URI inUri = new URI(inUrl);
+
+      cl = new PooledHttpClient(inUri);
+
       final DavUtil du = new DavUtil();
 
       final Collection<DavChild> dcs = du.getChildrenUrls(cl, inUrl, null);
-
-      final URI inUri = new URI(inUrl);
 
       if (Util.isEmpty(dcs)) {
         utils.warn("No files at " + inUrl);
@@ -553,23 +555,24 @@ public class Process extends AbstractMojo {
           utils.info("Found url " + dcUri);
         }
 
-        final InputStream is = cl.get(dcUri.toString());
+        final String zipName = dc.displayName + ".zip";
 
-        if (is == null) {
+        final Path zipPath = downloadPath.resolve(zipName);
+        final OutputStream zipOut = new FileOutputStream(zipPath.toFile());
+
+        if (!cl.getBinary(dcUri.toString(),
+                          zipOut)) {
           utils.warn("Unable to fetch " + dcUri);
           return null;
         }
 
-        final String zipName = dc.displayName + ".zip";
-
-        final Path zipPath = downloadPath.resolve(zipName);
-
-        Files.copy(is, zipPath);
         unzip(zipPath.toAbsolutePath().toString(),
               sourceEars);
       }
     } finally {
-      cl.release();
+      if (cl != null) {
+        cl.release();
+      }
     }
 
     return sourceEars;
