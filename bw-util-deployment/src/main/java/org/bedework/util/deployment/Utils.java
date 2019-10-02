@@ -368,7 +368,7 @@ public class Utils {
     Files.walkFileTree(inPath, opts, Integer.MAX_VALUE, tc);
   }
 
-  class TokenResolver implements ITokenResolver {
+  static class TokenResolver implements ITokenResolver {
     protected final PropertiesChain props;
 
     public TokenResolver(final PropertiesChain props) {
@@ -416,7 +416,6 @@ public class Utils {
       rdr = new TokenReplacingReader(new FileReader(in.toFile()),
                                     new TokenResolver(props));
       wtr = new FileWriter(out.toFile());
-      int length;
 
       int data = rdr.read();
       while(data != -1){
@@ -429,12 +428,16 @@ public class Utils {
                     ": " + t);
     } finally {
       try {
-        rdr.close();
+        if (rdr != null) {
+          rdr.close();
+        }
       } catch (final Throwable t) {
         error("Exception closing " + in + " " + t.getMessage());
       }
       try {
-        wtr.close();
+        if (wtr != null) {
+          wtr.close();
+        }
       } catch (final Throwable t) {
         error("Exception closing " + out + " " + t.getMessage());
       }
@@ -464,8 +467,7 @@ public class Utils {
 
     @Override
     public FileVisitResult visitFileFailed(final Path file,
-                                           final IOException ioe)
-            throws IOException {
+                                           final IOException ioe) {
       error("Unable to delete: " + file +
                     ": " + ioe);
       return FileVisitResult.CONTINUE;
@@ -530,6 +532,10 @@ public class Utils {
 
     final String[] names = dir.list();
 
+    if (names == null) {
+      return;
+    }
+
     for (final String nm: names) {
       if (nm.startsWith(sn.prefix) && nm.endsWith(sn.suffix)) {
         final Path p = Paths.get(dirPath, nm);
@@ -589,7 +595,7 @@ public class Utils {
 
   int getInt(final String val) {
     try {
-      return Integer.valueOf(val);
+      return Integer.parseInt(val);
     } catch (final Throwable ignored) {
       throw new RuntimeException("Failed to parse as Integer " + val);
     }
