@@ -1,16 +1,16 @@
 # bw-util-deploy
 Deployment related utility classes
 
-### Requirements
+## Requirements
 
-1. JDK 8
+1. JDK 11
 2. Maven 3
 
-### Building Locally
+## Building Locally
 
 > mvn clean install
 
-### Releasing
+## Releasing
 
 Releases of this fork are published to Maven Central via Sonatype.
 
@@ -21,19 +21,31 @@ To create a release, you must have:
 
 To perform a new release:
 
-> mvn release:clean release:prepare
+> mvn -P bedework-dev release:clean release:prepare
 
 When prompted, select the desired version; accept the defaults for scm tag and next development version.
 When the build completes, and the changes are committed and pushed successfully, execute:
 
-> mvn release:perform
+> mvn -P bedework-dev release:perform
 
 For full details, see [Sonatype's documentation for using Maven to publish releases](http://central.sonatype.org/pages/apache-maven.html).
 
-### Release Notes
-#### 4.0.22
-Split off from bw-util. Start at same version.
+## Release Notes
+### 4.0.22
+    * Split off from bw-util. Start at same version.
 
-#### 4.0.23
-Add a dump props method and use it
+### 4.0.23
+    * Add a dump props method and use it
 
+### 4.0.24
+    * Update dependencies
+    
+### 4.0.25
+    * Remove source/target from compiler plugin. Set in profile
+    * Update plugin versions
+
+### 4.0.26
+    * Update javadoc plugin config
+    * Switch to PooledHttpClient
+    * Add extra dependencies for bw-util refactor
+    
