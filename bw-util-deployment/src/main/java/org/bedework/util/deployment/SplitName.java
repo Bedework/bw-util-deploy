@@ -134,17 +134,21 @@ public class SplitName {
       return false;
     }
 
+    boolean foundSame = false;
+
     for (final SplitName sn: them) {
       if (!sameAs(sn)) {
         continue;
       }
+
+      foundSame = true;
 
       if (laterThan(sn)) {
         return true;
       }
     }
 
-    return false;
+    return !foundSame;
   }
 
   public String toString() {

@@ -27,7 +27,7 @@ public class Runnable {
     System.out.print("Usage: processEar [options]\n" +
                         "Options:\n" +
                         "    -h             Print this help and exit\n" +
-                        "    --baseDir      Directory containing the sppserver\n" +
+                        "    --baseDir      Directory containing the appserver\n" +
                         "    --in           Directory for ears\n" +
                         "    --inurl        WebDAV location for ears\n" +
                         "    --out          Directory for modified ears\n" +
@@ -37,7 +37,7 @@ public class Runnable {
                         "    --noversion    If specified suppress version check\n" +
                         "    --checkonly    Display what would be deployed without this flag\n" +
                         "    --delete       If specified delete target ear if it exists\n" +
-                        "    --prop         Path to property file defining configuration\n" +
+                        "    --props        Path to property file defining configuration\n" +
                         "    --ear          If specified restrict processing to named ear\n" +
                         "    --debug        Enable debugging messages\n" +
                         "\n" +
