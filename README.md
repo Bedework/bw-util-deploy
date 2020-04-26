@@ -35,17 +35,24 @@ For full details, see [Sonatype's documentation for using Maven to publish relea
     * Split off from bw-util. Start at same version.
 
 ### 4.0.23
-    * Add a dump props method and use it
+  * Add a dump props method and use it
 
 ### 4.0.24
-    * Update dependencies
+  * Update dependencies
     
 ### 4.0.25
-    * Remove source/target from compiler plugin. Set in profile
-    * Update plugin versions
+  * Remove source/target from compiler plugin. Set in profile
+  * Update plugin versions
 
 ### 4.0.26
-    * Update javadoc plugin config
-    * Switch to PooledHttpClient
-    * Add extra dependencies for bw-util refactor
+  * Update javadoc plugin config
+  * Switch to PooledHttpClient
+  * Add extra dependencies for bw-util refactor
+
+### 4.0.27
+  * Added assembly to create a runnable app. Will be used
+    for deploying the quickstart without building.
+  * Minor fixes to messages.
+  * Fixed checking of deployed version for case when 
+    no version deployed.
     
