@@ -171,7 +171,7 @@ public class Utils {
                                   " must exist");
     }
 
-    return dir;
+    return f;
   }
 
   public File file(final String path) {
@@ -551,7 +551,7 @@ public class Utils {
     info(f.format(fmt, params).toString());
   }
 
-  void info(final String msg) {
+  public void info(final String msg) {
     logger.info(msg);
   }
 

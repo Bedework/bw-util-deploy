@@ -17,6 +17,8 @@ package org.bedework.util.deployment;
 
 import org.bedework.util.misc.ToString;
 
+import org.apache.maven.artifact.versioning.ComparableVersion;
+
 import java.util.List;
 
 /** Result of splitting a name into its component parts, e.g.
@@ -127,10 +129,15 @@ public class SplitName {
   /** prefix and suffix must match.
    *
    * @param that SplitName to test
-   * @return true if version also is greater.
+   * @return true if this version also is greater than that version.
    */
   public boolean laterThan(final SplitName that) {
-    return sameAs(that) && getVersion().compareTo(that.getVersion()) > 0;
+    if (!sameAs(that)) {
+      return false;
+    }
+
+    return new ComparableVersion(getVersion()).compareTo(
+            new ComparableVersion(that.getVersion())) > 0;
   }
 
   /**

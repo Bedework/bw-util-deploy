@@ -218,11 +218,9 @@ public class DeployWfModule extends AbstractMojo {
 
         // Is the deployed version the same or later?
         if (!fn.laterThan(mfn)) {
-          if (debug) {
-            utils.debug(format("Deployed version %s later than %s",
-                               mfn.getVersion(), fn.getVersion()));
-            return;
-          }
+          utils.info(format("Deployed version %s same as or later than %s: skipping",
+                            mfn.getVersion(), fn.getVersion()));
+          return;
         }
 
         // Delete the current deployed version
@@ -234,11 +232,14 @@ public class DeployWfModule extends AbstractMojo {
 
         for (final String name: names) {
           final File f = utils.fileOrDir(mainDir, name);
+          utils.info("Delete file " + f);
           utils.deleteAll(f.toPath());
         }
       }
 
       // copy in the file.
+      utils.info(format("Deploy file %s to module %s",
+                        fn.getName(), moduleName));
       final File theFile = utils.file(fileDir, fn.getName(), true);
       Files.copy(theFile.toPath(),
                  mainDir.toPath().resolve(fn.getName()));
