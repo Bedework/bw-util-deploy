@@ -19,11 +19,12 @@ public class Ear extends DeployableResource implements Updateable {
              final String path,
              final SplitName sn,
              final PropertiesChain props) throws Throwable {
-    super(utils, path, sn, props, "org.bedework.app." + sn.prefix + ".");
+    super(utils, path, sn, props, "org.bedework.app." +
+            sn.getPrefix() + ".");
 
     final File earMeta = utils.subDirectory(theFile, "META-INF", true);
 
-    if (Boolean.valueOf(props.get("org.bedework.for.wildfly"))) {
+    if (Boolean.parseBoolean(props.get("org.bedework.for.wildfly"))) {
       final File jbossService = utils.file(earMeta,
                                            "jboss-service.xml",
                                            false);
@@ -56,7 +57,7 @@ public class Ear extends DeployableResource implements Updateable {
                               wsn, appXml, this.props,
                               "app.");
 
-      wars.put(wsn.name, war);
+      wars.put(wsn.getName(), war);
     }
   }
 
@@ -80,7 +81,7 @@ public class Ear extends DeployableResource implements Updateable {
 
   public War findWar(final String prefix) {
     for (final War war: wars.values()) {
-      if (prefix.equals(war.getSplitName().prefix)) {
+      if (prefix.equals(war.getSplitName().getPrefix())) {
         return war;
       }
     }
@@ -108,13 +109,13 @@ public class Ear extends DeployableResource implements Updateable {
   private void copyWar(final War war,
                        final String toPrefix) throws Throwable {
     final String toName = toPrefix + "-" +
-            war.getSplitName().version + ".war";
-    final SplitName toSn = new SplitName(toName, toPrefix);
+            war.getSplitName().getVersion() + ".war";
+    utils.info("Copy war " + war.getSplitName().getName() + " to " + toName);
 
-    utils.info("Copy war " + war.getSplitName().name + " to " + toName);
-
-    toSn.version = war.getSplitName().version;
-    toSn.suffix = "war";
+    final SplitName toSn = new SplitName(toName, toPrefix,
+                                         war.getSplitName()
+                                            .getVersion(),
+                                         "war");
 
     final File newWarDir = new File(theFile.getAbsolutePath(), toName);
 
@@ -132,7 +133,7 @@ public class Ear extends DeployableResource implements Updateable {
                                theFile.getAbsolutePath(),
                                toSn, appXml, props, "app.");
 
-    wars.put(toSn.name, newWar);
+    wars.put(toSn.getName(), newWar);
 
     appXml.addWebModule(toName);
   }

@@ -174,11 +174,11 @@ public class Utils {
     return dir;
   }
 
-  public File file(final String path) throws Throwable {
+  public File file(final String path) {
     final File f = new File(path);
 
     if (!f.exists() || !f.isFile()) {
-      throw new Exception(path + " must exist and be a file");
+      throw new RuntimeException(path + " must exist and be a file");
     }
 
     return f;
@@ -524,7 +524,7 @@ public class Utils {
    */
   void deleteMatching(final String dirPath,
                              final SplitName sn) throws Throwable {
-    if ((sn.prefix.length() < 3) || (sn.suffix.length() < 3)) {
+    if ((sn.getPrefix().length() < 3) || (sn.getSuffix().length() < 3)) {
       throw new Exception("Suspect name " + sn);
     }
 
@@ -537,7 +537,7 @@ public class Utils {
     }
 
     for (final String nm: names) {
-      if (nm.startsWith(sn.prefix) && nm.endsWith(sn.suffix)) {
+      if (nm.startsWith(sn.getPrefix()) && nm.endsWith(sn.getSuffix())) {
         final Path p = Paths.get(dirPath, nm);
         deleteAll(p);
       }
@@ -555,7 +555,7 @@ public class Utils {
     logger.info(msg);
   }
 
-  void error(final String msg) {
+  public void error(final String msg) {
     logger.error(msg);
   }
 
@@ -563,21 +563,21 @@ public class Utils {
     logger.error(t);
   }
 
-  void setDebug(final boolean val) {
+  public void setDebug(final boolean val) {
     debug = val;
   }
 
-  boolean debug() {
+  public boolean debug() {
     return debug;
   }
 
-  void debug(final String msg) {
+  public void debug(final String msg) {
     if (debug) {
       logger.debug(msg);
     }
   }
 
-  void warn(final String msg) {
+  public void warn(final String msg) {
     logger.warn(msg);
   }
 

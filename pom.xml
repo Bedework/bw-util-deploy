@@ -68,6 +68,7 @@
   <modules>
     <module>bw-util-deployment</module>
     <module>bw-util-maven-deploy</module>
+    <module>bw-util-maven-deploy-wfmodule</module>
   </modules>
 
   <developers>

@@ -65,7 +65,7 @@ public class DeployableResource extends VersionedFile {
       // Now update it
       final JbossAllXml jbossAll = new JbossAllXml(utils,
                                                    meta,
-                                                   sn.version,
+                                                   sn.getVersion(),
                                                    props);
       jbossAll.update();
       jbossAll.output();

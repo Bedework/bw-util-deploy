@@ -23,7 +23,7 @@ public class War extends DeployableResource implements Updateable {
              final ApplicationXml appXml,
              final PropertiesChain props,
              final String filterPrefix) throws Throwable {
-    super(utils, path, sn, props, filterPrefix + sn.prefix + ".");
+    super(utils, path, sn, props, filterPrefix + sn.getPrefix() + ".");
 
     warsonly = Boolean.valueOf(props.get(Process.propWarsOnly));
     this.appXml = appXml;
@@ -57,7 +57,7 @@ public class War extends DeployableResource implements Updateable {
     if (warsonly) {
       jbwXml.setContext();
     } else {
-      appXml.setContext(sn.name, props);
+      appXml.setContext(sn.getName(), props);
     }
 
     jbwXml.update();

@@ -32,11 +32,11 @@ import java.util.List;
  *
  */
 public class SplitName {
-  String name;
+  private final String name;
 
-  String prefix;
-  String version;
-  String suffix;
+  private final String prefix;
+  private String version;
+  private String suffix;
 
   SplitName(final String name,
             final String prefix) {
@@ -56,6 +56,15 @@ public class SplitName {
     } else {
       version = name.substring(dashPos + 1);
     }
+  }
+
+  SplitName(final String name,
+            final String prefix,
+            final String version,
+            final String suffix) {
+    this(name, prefix);
+    this.version = version;
+    this.suffix = suffix;
   }
 
   /** Tries to figure out what the prefix is for the name and then
@@ -112,7 +121,7 @@ public class SplitName {
    */
   public boolean sameAs(final SplitName that) {
     return prefix.equals(that.prefix) &&
-            suffix.equals(that.suffix);
+            getSuffix().equals(that.getSuffix());
   }
 
   /** prefix and suffix must match.
@@ -121,7 +130,7 @@ public class SplitName {
    * @return true if version also is greater.
    */
   public boolean laterThan(final SplitName that) {
-    return sameAs(that) && version.compareTo(that.version) > 0;
+    return sameAs(that) && getVersion().compareTo(that.getVersion()) > 0;
   }
 
   /**
@@ -151,13 +160,29 @@ public class SplitName {
     return !foundSame;
   }
 
+  public String getPrefix() {
+    return prefix;
+  }
+
+  public String getSuffix() {
+    return suffix;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public String getVersion() {
+    return version;
+  }
+
   public String toString() {
     final ToString ts = new ToString(this);
 
-    ts.append("name", name);
+    ts.append("name", getName());
     ts.append("prefix", prefix);
-    ts.append("version", version);
-    ts.append("suffix", suffix);
+    ts.append("version", getVersion());
+    ts.append("suffix", getSuffix());
 
     return ts.toString();
   }

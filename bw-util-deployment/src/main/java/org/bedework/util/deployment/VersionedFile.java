@@ -36,7 +36,7 @@ public class VersionedFile extends BaseClass {
       }
     }
 
-    theFile = utils.subDirectory(path, sn.name);
+    theFile = utils.subDirectory(path, sn.getName());
   }
 
   public SplitName getSplitName() {

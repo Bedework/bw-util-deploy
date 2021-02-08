@@ -251,18 +251,20 @@ public class Process extends AbstractMojo {
 
       for (final SplitName sn: getDeployedNames(deployDirPath,
                                                 null)) {
-        if (!"war".equals(sn.suffix) && !"ear".equals(sn.suffix)) {
+        if (!"war".equals(sn.getSuffix()) && !"ear".equals(
+                sn.getSuffix())) {
           continue;
         }
 
         // Add version to properties for dependencies
         if (utils.debug()) {
           utils.debug("adding org.bedework.global.versions." +
-                             sn.prefix + "=" +
-                             sn.version);
+                              sn.getPrefix() + "=" +
+                              sn.getVersion());
         }
-        utils.setVersionsProp("org.bedework.global.versions." + sn.prefix,
-                              sn.version);
+        utils.setVersionsProp("org.bedework.global.versions." + sn
+                                      .getPrefix(),
+                              sn.getVersion());
       }
 
       if (!warsonly) {
@@ -382,10 +384,10 @@ public class Process extends AbstractMojo {
     final List<PathAndName> files = new ArrayList<>();
 
     for (final SplitName sn: splitNames) {
-      if (!names.contains(sn.prefix)) {
+      if (!names.contains(sn.getPrefix())) {
         // We were given a specific name and this isn't it
-        utils.warn("Prefix " + sn.prefix +
-                           " for file " + sn.name +
+        utils.warn("Prefix " + sn.getPrefix() +
+                           " for file " + sn.getName() +
                            " not in properties as deployable file. Skipping");
         continue;
       }
@@ -393,25 +395,25 @@ public class Process extends AbstractMojo {
       if (!noversion) {
         // See if this is a later version than the deployed file
         if (!sn.laterThan(deployed)) {
-          utils.warn("File " + sn.name + " not later than deployed file. Skipping");
+          utils.warn("File " + sn.getName() + " not later than deployed file. Skipping");
           continue;
         }
       }
 
-      if (!allowedNames.contains(sn.prefix)) {
-        utils.warn(sn.name + " is not in the list of supported files. Skipped");
+      if (!allowedNames.contains(sn.getPrefix())) {
+        utils.warn(sn.getName() + " is not in the list of supported files. Skipped");
         continue;
       }
 
       if (checkonly) {
-        utils.info("File " + sn.name + " is deployable");
+        utils.info("File " + sn.getName() + " is deployable");
         continue;
       }
 
-      utils.info("Processing " + sn.name);
+      utils.info("Processing " + sn.getName());
 
-      final Path inPath = Paths.get(inDirPath, sn.name);
-      final Path outPath = Paths.get(outDirPath, sn.name);
+      final Path inPath = Paths.get(inDirPath, sn.getName());
+      final Path outPath = Paths.get(outDirPath, sn.getName());
 
       if (delete) {
         final File outFile = outPath.toFile();
@@ -449,11 +451,11 @@ public class Process extends AbstractMojo {
 
     for (final SplitName sn: getDeployedNames(outDirPath,
                                               suffix)) {
-      utils.info("Deploying " + sn.name);
+      utils.info("Deploying " + sn.getName());
       deployed++;
 
       utils.deleteMatching(deployDirPath, sn);
-      final Path deployPath = Paths.get(deployDirPath, sn.name);
+      final Path deployPath = Paths.get(deployDirPath, sn.getName());
 
       if (delete) {
         final File deployFile = deployPath.toFile();
@@ -465,7 +467,7 @@ public class Process extends AbstractMojo {
 
       if (wildfly) {
         // Remove any deployment directive files
-        Path thePath = Paths.get(deployDirPath, sn.name + ".failed");
+        Path thePath = Paths.get(deployDirPath, sn.getName() + ".failed");
         File theFile = thePath.toFile();
 
         if (theFile.exists()) {
@@ -474,7 +476,7 @@ public class Process extends AbstractMojo {
           }
         }
 
-        thePath = Paths.get(deployDirPath, sn.name + ".deployed");
+        thePath = Paths.get(deployDirPath, sn.getName() + ".deployed");
         theFile = thePath.toFile();
 
         if (theFile.exists()) {
@@ -483,7 +485,7 @@ public class Process extends AbstractMojo {
           }
         }
 
-        thePath = Paths.get(deployDirPath, sn.name + ".dodeploy");
+        thePath = Paths.get(deployDirPath, sn.getName() + ".dodeploy");
         theFile = thePath.toFile();
 
         if (theFile.exists()) {
@@ -494,12 +496,12 @@ public class Process extends AbstractMojo {
 
       }
 
-      final Path outPath = Paths.get(outDirPath, sn.name);
+      final Path outPath = Paths.get(outDirPath, sn.getName());
       utils.copy(outPath, deployPath, false, null);
 
       if (wildfly) {
         final File doDeploy = Paths.get(deployDirPath,
-                                        sn.name + ".dodeploy").toFile();
+                                        sn.getName() + ".dodeploy").toFile();
         if (!doDeploy.createNewFile()) {
           utils.warn("Unable to create file " + doDeploy);
         }
@@ -667,7 +669,8 @@ public class Process extends AbstractMojo {
       utils.debug("Split name: " + sn);
 
       if ((sn == null) ||
-              ((sn.suffix != null) && (!suffix.equals(sn.suffix)))) {
+              ((sn.getSuffix() != null) && (!suffix.equals(
+                      sn.getSuffix())))) {
         continue;
       }
 
@@ -688,6 +691,10 @@ public class Process extends AbstractMojo {
 
     final List<SplitName> splitNames = new ArrayList<>();
 
+    if (deployedNames == null) {
+      return splitNames;
+    }
+
     for (final String nm: deployedNames) {
       final SplitName sn = SplitName.testName(nm);
 
@@ -696,7 +703,7 @@ public class Process extends AbstractMojo {
         continue;
       }
 
-      if ((suffix != null) && !suffix.equals(sn.suffix)) {
+      if ((suffix != null) && !suffix.equals(sn.getSuffix())) {
         continue;
       }
 
