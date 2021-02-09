@@ -1,10 +1,8 @@
 package org.bedework.util.deployment;
 
-import org.bedework.util.dav.DavUtil;
-import org.bedework.util.dav.DavUtil.DavChild;
-import org.bedework.util.http.PooledHttpClient;
-import org.bedework.util.misc.Util;
-
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
 
@@ -19,13 +17,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import static org.bedework.util.deployment.NetUtil.DavChild;
 
 /** Process a ear for deployment. The ear is in its exploded form -
  * nothing zipped. This app will use the wars inside as patterns
@@ -527,22 +526,21 @@ public class Process extends AbstractMojo {
    * @throws Throwable
    */
   private String getRemoteFiles(final String inUrl) throws Throwable {
-    PooledHttpClient cl = null;
-
     final Path downloadPath = getTempDirectory("bwdownload");
     final Path expandPath = getTempDirectory("bwexpand");
     final String sourceEars = expandPath.toAbsolutePath().toString();
 
-    try {
+    final HttpClientBuilder clb = HttpClients.custom();
+
+    try (final CloseableHttpClient cl =
+                 clb.disableRedirectHandling().build()) {
+
+      final NetUtil du = new NetUtil();
       final URI inUri = new URI(inUrl);
 
-      cl = new PooledHttpClient(inUri);
+      final List<DavChild> dcs = du.getChildrenUrls(cl, inUri);
 
-      final DavUtil du = new DavUtil();
-
-      final Collection<DavChild> dcs = du.getChildrenUrls(cl, inUrl, null);
-
-      if (Util.isEmpty(dcs)) {
+      if (dcs.isEmpty()) {
         utils.warn("No files at " + inUrl);
         return null;
       }
@@ -562,18 +560,15 @@ public class Process extends AbstractMojo {
         final Path zipPath = downloadPath.resolve(zipName);
         final OutputStream zipOut = new FileOutputStream(zipPath.toFile());
 
-        if (!cl.getBinary(dcUri.toString(),
-                          zipOut)) {
+        if (!NetUtil.getBinary(cl,
+                               dcUri,
+                               zipOut)) {
           utils.warn("Unable to fetch " + dcUri);
           return null;
         }
 
         unzip(zipPath.toAbsolutePath().toString(),
               sourceEars);
-      }
-    } finally {
-      if (cl != null) {
-        cl.release();
       }
     }
 

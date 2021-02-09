@@ -1,7 +1,5 @@
 package org.bedework.util.deployment;
 
-import org.bedework.util.xml.XmlUtil;
-
 import org.w3c.dom.Element;
 
 import java.io.File;
@@ -20,12 +18,12 @@ public class ApplicationXml extends XmlFile {
                         final File meta) throws Throwable {
     super(utils, meta, "application.xml", false);
 
-    for (final Element module: XmlUtil.getElementsArray(root)) {
+    for (final Element module: NetUtil.getElementsArray(root)) {
       if (!"module".equals(module.getTagName())) {
         continue;
       }
 
-      final Element el = XmlUtil.getOnlyElement(module);
+      final Element el = NetUtil.getOnlyElement(module);
 
       if ((el == null) || !"web".equals(el.getTagName())) {
         continue;
@@ -44,7 +42,7 @@ public class ApplicationXml extends XmlFile {
 
       mdl.webUriEl = webUriEl;
 
-      webModules.put(XmlUtil.getElementContent(webUriEl),
+      webModules.put(NetUtil.getElementContent(webUriEl),
                      mdl);
     }
   }
@@ -81,7 +79,7 @@ public class ApplicationXml extends XmlFile {
     /* Find the first module element. Note this won't work if there are
        no modules.
      */
-    for (final Element module : XmlUtil.getElementsArray(root)) {
+    for (final Element module : NetUtil.getElementsArray(root)) {
       if (!"module".equals(module.getTagName())) {
         continue;
       }

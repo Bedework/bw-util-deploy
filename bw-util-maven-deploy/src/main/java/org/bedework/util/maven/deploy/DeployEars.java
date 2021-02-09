@@ -4,7 +4,6 @@
 package org.bedework.util.maven.deploy;
 
 import org.bedework.util.deployment.Process;
-import org.bedework.util.misc.Util;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
@@ -71,9 +70,7 @@ public class DeployEars extends AbstractMojo {
     pe.setBaseDirPath(baseDirPath);
     pe.setInUrl(inUrl);
     pe.setInDirPath(target.getAbsolutePath());
-    pe.setOutDirPath(Util.buildPath(true, target.getAbsolutePath(),
-                                    "/",
-                                    "modified"));
+    pe.setOutDirPath(target.toPath().resolve("modified").toString());
     pe.setDeployDirPath(deployDirPath);
     pe.setArgDebug(debug);
     pe.setNoversion(noversion);

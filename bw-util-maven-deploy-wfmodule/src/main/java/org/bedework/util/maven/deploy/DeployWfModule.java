@@ -6,8 +6,6 @@ package org.bedework.util.maven.deploy;
 import org.bedework.util.deployment.SplitName;
 import org.bedework.util.deployment.Utils;
 import org.bedework.util.deployment.XmlFile;
-import org.bedework.util.misc.ToString;
-import org.bedework.util.misc.Util;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
@@ -20,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import static java.lang.String.format;
@@ -29,7 +28,8 @@ import static java.lang.String.format;
  */
 @Mojo(name = "bw-deploy-wfmodule")
 public class DeployWfModule extends AbstractMojo {
-  private static String moduleXmlStr = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+  private static final String moduleXmlStr =
+          "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
           "<!--\n" +
           "  ~ JBoss, Home of Professional Open Source.\n" +
           "  ~ Copyright 2010, Red Hat, Inc., and individual contributors\n" +
@@ -93,15 +93,23 @@ public class DeployWfModule extends AbstractMojo {
     private String type;
 
     public String toString() {
-      final ToString ts = new ToString(this);
+      final StringBuilder sb = new StringBuilder(
+              this.getClass().getSimpleName());
 
-      ts.append("moduleName", moduleName);
-      ts.append("groupId", groupId);
-      ts.append("artifactId", artifactId);
-      ts.append("version", version);
-      ts.append("type", type);
+      sb.append("{");
+      sb.append("moduleName");
+      sb.append(moduleName);
+      sb.append(", groupId");
+      sb.append(groupId);
+      sb.append(", artifactId");
+      sb.append(artifactId);
+      sb.append(", version");
+      sb.append(version);
+      sb.append(". type");
+      sb.append(type);
+      sb.append("}");
 
-      return ts.toString();
+      return sb.toString();
     }
   }
 
@@ -147,7 +155,7 @@ public class DeployWfModule extends AbstractMojo {
 
       // First deploy any jar dependencies
 
-      if (Util.isEmpty(jarDependencies)) {
+      if (isEmpty(jarDependencies)) {
         utils.debug("No jar dependencies");
       } else {
         for (final JarDependency jd: jarDependencies) {
@@ -255,7 +263,7 @@ public class DeployWfModule extends AbstractMojo {
                             moduleName);
       moduleXml.addResource(fn.getName());
 
-      if (!Util.isEmpty(moduleDependencies)) {
+      if (!isEmpty(moduleDependencies)) {
         for (final var m: moduleDependencies) {
           moduleXml.addDependency(m);
         }
@@ -370,5 +378,13 @@ public class DeployWfModule extends AbstractMojo {
     }
 
     return module;
+  }
+
+  public static boolean isEmpty(final Collection<?> val) {
+    if (val == null) {
+      return true;
+    }
+
+    return val.isEmpty();
   }
 }

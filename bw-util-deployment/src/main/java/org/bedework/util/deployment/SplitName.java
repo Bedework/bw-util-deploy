@@ -15,8 +15,6 @@
 */
 package org.bedework.util.deployment;
 
-import org.bedework.util.misc.ToString;
-
 import org.apache.maven.artifact.versioning.ComparableVersion;
 
 import java.util.List;
@@ -184,14 +182,21 @@ public class SplitName {
   }
 
   public String toString() {
-    final ToString ts = new ToString(this);
+    final StringBuilder sb = new StringBuilder(
+            this.getClass().getSimpleName());
 
-    ts.append("name", getName());
-    ts.append("prefix", prefix);
-    ts.append("version", getVersion());
-    ts.append("suffix", getSuffix());
+    sb.append("{");
+    sb.append("name");
+    sb.append(getName());
+    sb.append(", prefix");
+    sb.append(prefix);
+    sb.append(", version");
+    sb.append(getVersion());
+    sb.append(", suffix");
+    sb.append(getSuffix());
+    sb.append("}");
 
-    return ts.toString();
+    return sb.toString();
   }
 }
 

@@ -1,8 +1,5 @@
 package org.bedework.util.deployment;
 
-import org.bedework.util.xml.XmlOutput;
-import org.bedework.util.xml.XmlUtil;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -57,12 +54,12 @@ public class XmlFile extends BaseClass {
   public void output() throws Throwable {
     final OutputStream out = new FileOutputStream(theXml, false);
 
-    XmlOutput.printDocument(doc, out);
+    NetUtil.printDocument(doc, out);
   }
 
   protected Element findElement(final Element root,
-                                final String tagName) throws Throwable {
-    for (final Element el: XmlUtil.getElementsArray(root)) {
+                                final String tagName) {
+    for (final Element el: NetUtil.getElementsArray(root)) {
       if (tagName.equals(el.getTagName())) {
         return el;
       }
@@ -77,11 +74,10 @@ public class XmlFile extends BaseClass {
    * @param root    search below this for named element
    * @param props to lookup new value
    * @param tagnames path to element to set content for
-   * @throws Throwable
    */
   protected void propsReplaceContent(final Element root,
                                      final PropertiesChain props,
-                                     final String... tagnames) throws Throwable {
+                                     final String... tagnames) {
     Element el = root;
     if (tagnames != null) {
       for (final String nm: tagnames) {
@@ -92,7 +88,7 @@ public class XmlFile extends BaseClass {
       }
     }
 
-    final String s = XmlUtil.getElementContent(el);
+    final String s = NetUtil.getElementContent(el);
 
     final String newS = props.replace(s);
 
@@ -100,7 +96,7 @@ public class XmlFile extends BaseClass {
       return;
     }
 
-    XmlUtil.setElementContent(el, newS);
+    NetUtil.setElementContent(el, newS);
     updated = true;
   }
 
@@ -110,19 +106,18 @@ public class XmlFile extends BaseClass {
    * @param root    search below this for named element
    * @param tagname element to set content for
    * @param props to lookup new value
-   * @throws Throwable
    */
   protected void propsReplaceContent(final Element root,
                                      final String tagname,
-                                     final PropertiesChain props) throws Throwable {
-    final Node n = XmlUtil.getOneTaggedNode(root, tagname);
+                                     final PropertiesChain props) {
+    final Node n = NetUtil.getOneTaggedNode(root, tagname);
 
     if (n == null) {
       //utils.info("no element with name " + tagname);
       return;
     }
 
-    final String s = XmlUtil.getElementContent((Element)n);
+    final String s = NetUtil.getElementContent((Element)n);
 
     final String newS = props.replace(s);
 
@@ -130,7 +125,7 @@ public class XmlFile extends BaseClass {
       return;
     }
 
-    XmlUtil.setElementContent(n, newS);
+    NetUtil.setElementContent(n, newS);
     updated = true;
   }
 
@@ -140,12 +135,11 @@ public class XmlFile extends BaseClass {
    * @param el    element
    * @param attrname attribute to change
    * @param props to lookup new value
-   * @throws Throwable on xml error
    */
   protected void propsReplaceAttr(final Element el,
                                   final String attrname,
-                                  final PropertiesChain props) throws Throwable {
-    final String s = XmlUtil.getAttrVal(el, attrname);
+                                  final PropertiesChain props) {
+    final String s = NetUtil.getAttrVal(el, attrname);
 
     final String newS = props.replace(s);
 

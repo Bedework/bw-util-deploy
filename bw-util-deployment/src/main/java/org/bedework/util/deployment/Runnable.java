@@ -1,7 +1,5 @@
 package org.bedework.util.deployment;
 
-import org.bedework.util.args.Args;
-
 import org.apache.maven.plugin.logging.Log;
 
 /** Process a ear for deployment. The ear is in its exploded form -

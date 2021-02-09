@@ -1,7 +1,5 @@
 package org.bedework.util.deployment;
 
-import org.bedework.util.xml.XmlUtil;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -30,7 +28,7 @@ public class WebModule {
    */
   public static WebModule testWebModule(final Document doc,
                                         final Element mdlRoot) throws Throwable {
-    final Element el = XmlUtil.getOnlyElement(mdlRoot);
+    final Element el = NetUtil.getOnlyElement(mdlRoot);
 
     if ((el == null) || !"web".equals(el.getLocalName())) {
       return null;
@@ -44,16 +42,16 @@ public class WebModule {
     this.doc = doc;
     this.mdlRoot = mdlRoot;
 
-    final Element mdType = XmlUtil.getOnlyElement(mdlRoot);
+    final Element mdType = NetUtil.getOnlyElement(mdlRoot);
 
-    for (final Element el : XmlUtil.getElementsArray(mdType)) {
+    for (final Element el : NetUtil.getElementsArray(mdType)) {
       if ("web-uri".equals(el.getLocalName())) {
-        name = XmlUtil.getElementContent(el);
+        name = NetUtil.getElementContent(el);
         continue;
       }
 
       if ("context-root".equals(el.getLocalName())) {
-        context = XmlUtil.getElementContent(el);
+        context = NetUtil.getElementContent(el);
       }
     }
   }

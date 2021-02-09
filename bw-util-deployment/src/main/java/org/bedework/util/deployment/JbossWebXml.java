@@ -1,7 +1,5 @@
 package org.bedework.util.deployment;
 
-import org.bedework.util.xml.XmlUtil;
-
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -57,7 +55,7 @@ public class JbossWebXml extends XmlFile {
   }
 
   public void setJndiNames() throws Throwable {
-    for (final Element el: XmlUtil.getElements(root)) {
+    for (final Element el: NetUtil.getElements(root)) {
       if (!"resource-ref".equals(el.getTagName())) {
         continue;
       }

@@ -13,30 +13,14 @@
   <packaging>jar</packaging>
 
   <dependencies>
-    <!-- Bedework -->
     <dependency>
-      <groupId>org.bedework</groupId>
-      <artifactId>bw-util-args</artifactId>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.bedework</groupId>
-      <artifactId>bw-util-dav</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.bedework</groupId>
-      <artifactId>bw-util-logging</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.bedework</groupId>
-      <artifactId>bw-util-http</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.bedework</groupId>
-      <artifactId>bw-util-xml</artifactId>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
     </dependency>
 
     <dependency>
@@ -47,6 +31,12 @@
     <dependency>
       <groupId>org.apache.maven.plugin-tools</groupId>
       <artifactId>maven-plugin-annotations</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>

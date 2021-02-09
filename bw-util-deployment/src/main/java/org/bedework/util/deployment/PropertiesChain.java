@@ -1,7 +1,5 @@
 package org.bedework.util.deployment;
 
-import org.bedework.util.misc.Util;
-
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
@@ -60,7 +58,7 @@ import java.util.Set;
  *
  * @author douglm
  */
-public class PropertiesChain implements Util.PropertyFetcher {
+public class PropertiesChain {
   private final Deque<Properties> pstack = new ArrayDeque<>();
 
   public PropertiesChain copy() {
@@ -86,7 +84,6 @@ public class PropertiesChain implements Util.PropertyFetcher {
     return pstack.peek().stringPropertyNames();
   }
 
-  @Override
   public String get(final String name) {
     String pname = name;
     int level = pstack.size();
@@ -98,7 +95,7 @@ public class PropertiesChain implements Util.PropertyFetcher {
 
       final String s = props.getProperty(pname);
       if (s != null) {
-        return Util.propertyReplace(s, this);
+        return replace(s);
       }
 
       level--;
@@ -114,7 +111,7 @@ public class PropertiesChain implements Util.PropertyFetcher {
     for (final Properties props: pstack) {
       final String s = props.getProperty(name);
       if (s != null) {
-        return Util.propertyReplace(s, this);
+        return replace(s);
       }
     }
 
@@ -137,12 +134,54 @@ public class PropertiesChain implements Util.PropertyFetcher {
     return Arrays.asList(pvals);
   }
 
-  public String replace(final String s) {
-    if (s == null) {
+  public String replace(final String val) {
+    if (val == null) {
       return null;
     }
 
-    return Util.propertyReplace(s, this);
+    int pos = val.indexOf("${");
+
+    if (pos < 0) {
+      return val;
+    }
+
+    final StringBuilder sb = new StringBuilder(val.length());
+    int segStart = 0;
+
+    while (true) {
+      if (pos > 0) {
+        sb.append(val.substring(segStart, pos));
+      }
+
+      final int end = val.indexOf("}", pos);
+
+      if (end < 0) {
+        //No matching close. Just append rest and return.
+        sb.append(val.substring(pos));
+        break;
+      }
+
+      final String pval = get(val.substring(pos + 2, end).trim());
+
+      if (pval != null) {
+        sb.append(pval);
+      }
+
+      segStart = end + 1;
+      if (segStart > val.length()) {
+        break;
+      }
+
+      pos = val.indexOf("${", segStart);
+
+      if (pos < 0) {
+        //Done.
+        sb.append(val.substring(segStart));
+        break;
+      }
+    }
+
+    return sb.toString();
   }
 
   public void pushFiltered(final String prefix,

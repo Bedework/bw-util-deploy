@@ -1,7 +1,5 @@
 package org.bedework.util.deployment;
 
-import org.bedework.util.xml.XmlUtil;
-
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -50,7 +48,7 @@ public class Wsdl extends XmlFile {
    */
   public void replaceSoapAddressLocation() throws Throwable {
     final Element service =
-            (Element)XmlUtil.getOneTaggedNode(root, "wsdl:service");
+            (Element)NetUtil.getOneTaggedNode(root, "wsdl:service");
 
     if (service == null) {
       utils.error("Badly formed wssvc - no service element: " +
@@ -58,7 +56,7 @@ public class Wsdl extends XmlFile {
       return;
     }
 
-    final Node port = XmlUtil.getOneTaggedNode(service, "wsdl:port");
+    final Node port = NetUtil.getOneTaggedNode(service, "wsdl:port");
 
     if (port == null) {
       utils.error("Badly formed wssvc - no port element: " +
@@ -66,7 +64,7 @@ public class Wsdl extends XmlFile {
       return;
     }
 
-    final Node addr = XmlUtil.getOneTaggedNode(port, "soap:address");
+    final Node addr = NetUtil.getOneTaggedNode(port, "soap:address");
 
     if (addr == null) {
       utils.error("Badly formed wssvc - no address element: " +

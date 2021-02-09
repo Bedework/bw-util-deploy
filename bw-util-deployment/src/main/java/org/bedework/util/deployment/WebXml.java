@@ -1,7 +1,5 @@
 package org.bedework.util.deployment;
 
-import org.bedework.util.xml.XmlUtil;
-
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -38,18 +36,18 @@ public class WebXml extends XmlFile {
 
   public void setConfigName() throws Throwable {
     findBwappname:
-    for (final Element el : XmlUtil.getElementsArray(root)) {
+    for (final Element el : NetUtil.getElementsArray(root)) {
       if (!"context-param".equals(el.getNodeName())) {
         continue findBwappname;
       }
 
-      final Node pn = XmlUtil.getOneTaggedNode(el, "param-name");
+      final Node pn = NetUtil.getOneTaggedNode(el, "param-name");
 
       if (pn == null) {
         continue findBwappname;
       }
 
-      final String pname = XmlUtil.getElementContent((Element)pn);
+      final String pname = NetUtil.getElementContent((Element)pn);
 
       if (!"bwappname".equals(pname)) {
         continue findBwappname;
@@ -60,7 +58,7 @@ public class WebXml extends XmlFile {
   }
 
   public void setSessionTimeout() throws Throwable {
-    final Node n = XmlUtil.getOneTaggedNode(root, "session-config");
+    final Node n = NetUtil.getOneTaggedNode(root, "session-config");
 
     if (n == null) {
       return;
@@ -79,7 +77,7 @@ public class WebXml extends XmlFile {
         continue;
       }
 
-      final Node udc = XmlUtil.getOneTaggedNode(n, "user-data-constraint");
+      final Node udc = NetUtil.getOneTaggedNode(n, "user-data-constraint");
 
       if (udc == null) {
         continue;
@@ -90,7 +88,7 @@ public class WebXml extends XmlFile {
   }
 
   public void setSecurityDomain() throws Throwable {
-    final Node n = XmlUtil.getOneTaggedNode(root, "login-config");
+    final Node n = NetUtil.getOneTaggedNode(root, "login-config");
 
     if (n == null) {
       return;
@@ -122,14 +120,14 @@ public class WebXml extends XmlFile {
       }
 
       /* Put in front of login-config */
-      final Node insertAt = XmlUtil.getOneTaggedNode(root, "login-config");
+      final Node insertAt = NetUtil.getOneTaggedNode(root, "login-config");
 
       if (insertAt == null) {
         // Bad web.xml?
         throw new Exception("Cannot locate place to insert security constraint");
       }
 
-      for (final Element el: XmlUtil.getElements(scsDefs.root)) {
+      for (final Element el: NetUtil.getElements(scsDefs.root)) {
         root.insertBefore(doc.importNode(el, true), insertAt);
       }
     } catch (final Throwable t) {
@@ -152,11 +150,11 @@ public class WebXml extends XmlFile {
       final XmlFile fltrDefs = new XmlFile(utils, fltr, false);
 
       /* if we already have a filter def insert in front */
-      Node insertAt = XmlUtil.getOneTaggedNode(root, "filter");
+      Node insertAt = NetUtil.getOneTaggedNode(root, "filter");
 
       if (insertAt == null) {
         // then try for listener
-        insertAt = XmlUtil.getOneTaggedNode(root, "listener");
+        insertAt = NetUtil.getOneTaggedNode(root, "listener");
       }
 
       if (insertAt == null) {
@@ -164,7 +162,7 @@ public class WebXml extends XmlFile {
         throw new Exception("Cannot locate place to insert filter");
       }
 
-      for (final Element el: XmlUtil.getElements(fltrDefs.root)) {
+      for (final Element el: NetUtil.getElements(fltrDefs.root)) {
         root.insertBefore(doc.importNode(el, true), insertAt);
       }
       if (utils.debug()) {
@@ -190,11 +188,11 @@ public class WebXml extends XmlFile {
       final XmlFile fltrDefs = new XmlFile(utils, fltr, false);
 
       /* if we already have a filter def insert in front */
-      Node insertAt = XmlUtil.getOneTaggedNode(root, "filter-mapping");
+      Node insertAt = NetUtil.getOneTaggedNode(root, "filter-mapping");
 
       if (insertAt == null) {
         // then try for listener
-        insertAt = XmlUtil.getOneTaggedNode(root, "listener");
+        insertAt = NetUtil.getOneTaggedNode(root, "listener");
       }
 
       if (insertAt == null) {
@@ -202,7 +200,7 @@ public class WebXml extends XmlFile {
         throw new Exception("Cannot locate place to insert filter-mapping");
       }
 
-      for (final Element el: XmlUtil.getElements(fltrDefs.root)) {
+      for (final Element el: NetUtil.getElements(fltrDefs.root)) {
         root.insertBefore(doc.importNode(el, true), insertAt);
       }
       if (utils.debug()) {
@@ -225,14 +223,14 @@ public class WebXml extends XmlFile {
       final XmlFile fltrDefs = new XmlFile(utils, fltr, false);
 
       /* Insert in front current listener */
-      final Node insertAt = XmlUtil.getOneTaggedNode(root, "listener");
+      final Node insertAt = NetUtil.getOneTaggedNode(root, "listener");
 
       if (insertAt == null) {
         // Bad web.xml?
         throw new Exception("Cannot locate place to insert listener");
       }
 
-      for (final Element el: XmlUtil.getElements(fltrDefs.root)) {
+      for (final Element el: NetUtil.getElements(fltrDefs.root)) {
         root.insertBefore(doc.importNode(el, true), insertAt);
       }
     } catch (final Throwable t) {
