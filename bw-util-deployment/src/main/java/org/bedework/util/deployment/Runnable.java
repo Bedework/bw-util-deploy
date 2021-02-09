@@ -22,44 +22,45 @@ public class Runnable {
       System.err.println(error_msg);
     }
 
-    System.out.print("Usage: processEar [options]\n" +
-                        "Options:\n" +
-                        "    -h             Print this help and exit\n" +
-                        "    --baseDir      Directory containing the appserver\n" +
-                        "    --in           Directory for ears\n" +
-                        "    --inurl        WebDAV location for ears\n" +
-                        "    --out          Directory for modified ears\n" +
-                        "    --deploy       Directory to deploy modified ears\n" +
-                        "    --resources    Base for resource references\n" +
-                        "    --noclean      Don't delete temp dirs - helps debugging\n" +
-                        "    --noversion    If specified suppress version check\n" +
-                        "    --checkonly    Display what would be deployed without this flag\n" +
-                        "    --delete       If specified delete target ear if it exists\n" +
-                        "    --props        Path to property file defining configuration\n" +
-                        "    --ear          If specified restrict processing to named ear\n" +
-                        "    --debug        Enable debugging messages\n" +
-                        "\n" +
-                        "Description:\n" +
-                        "    This utility updates an exploded ear making it ready\n" +
-                        "    for deployment.\n" +
-                        "\n" +
-                        "    Only ear files later than the currently deployed ears\n" +
-                        "    will be processed.\n" +
-                        "\n" +
-                        "    The 'out' directory is first deleted and recreated\n" +
-                        "\n" +
-                        "    If 'inurl' is specified a list of the latest ears from\n" +
-                        "    that location is created. These ears will be downloaded to a\n" +
-                        "    temporary input directory and unzipped.\n" +
-                        "\n" +
-                        "    The ear is copied from the specified 'in' directory \n" +
-                        "    to the 'out' and then modified.\n" +
-                        "\n" +
-                        "    If '--deploy' has been specified the modified ear is then \n" +
-                        "    copied from the 'out' directory to the 'deploy' directory.\n" +
-                        "\n" +
-                        "    This process avoids the application server attempting to \n" +
-                        "    deploy partially modified ears.\n");
+    System.out.print(
+        "Usage: processEar [options]\n" +
+        "Options:\n" +
+        "    -h             Print this help and exit\n" +
+        "    --baseDir      Directory containing the appserver\n" +
+        "    --in           Directory for ears\n" +
+        "    --inurl        WebDAV location for ears\n" +
+        "    --out          Directory for modified ears\n" +
+        "    --deploy       Directory to deploy modified ears\n" +
+        "    --resources    Base for resource references\n" +
+        "    --noclean      Don't delete temp dirs - helps debugging\n" +
+        "    --noversion    If specified suppress version check\n" +
+        "    --checkonly    Display what would be deployed without this flag\n" +
+        "    --delete       If specified delete target ear if it exists\n" +
+        "    --props        Path to property file defining configuration\n" +
+        "    --ear          If specified restrict processing to named ear\n" +
+        "    --debug        Enable debugging messages\n" +
+        "\n" +
+        "Description:\n" +
+        "    This utility updates an exploded ear making it ready\n" +
+        "    for deployment.\n" +
+        "\n" +
+        "    Only ear files later than the currently deployed ears\n" +
+        "    will be processed.\n" +
+        "\n" +
+        "    The 'out' directory is first deleted and recreated\n" +
+        "\n" +
+        "    If 'inurl' is specified a list of the latest ears from\n" +
+        "    that location is created. These ears will be downloaded to a\n" +
+        "    temporary input directory and unzipped.\n" +
+        "\n" +
+        "    The ear is copied from the specified 'in' directory \n" +
+        "    to the 'out' and then modified.\n" +
+        "\n" +
+        "    If '--deploy' has been specified the modified ear is then \n" +
+        "    copied from the 'out' directory to the 'deploy' directory.\n" +
+        "\n" +
+        "    This process avoids the application server attempting to \n" +
+        "    deploy partially modified ears.\n");
 
     if (error_msg != null) {
       throw new RuntimeException(error_msg);
@@ -96,7 +97,7 @@ public class Runnable {
   private String propsPath;
   */
 
-  boolean processArgs(final Args args) throws Throwable {
+  boolean processArgs(final Args args) {
     if (args == null) {
       return true;
     }
@@ -267,9 +268,8 @@ public class Runnable {
 
   /**
    * @param args program arguments
-   * @throws Exception
    */
-  public static void main(final String[] args) throws Exception {
+  public static void main(final String[] args) {
     final Runnable r = new Runnable();
 
     try {

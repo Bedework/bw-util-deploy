@@ -25,13 +25,13 @@ import java.io.Serializable;
  * @author Mike Douglass
  */
 public class Args implements Serializable {
-  private String[] args;
+  private final String[] args;
   private int pos;
 
   /**
-   * @param args
+   * @param args from command line
    */
-  public Args(String[] args) {
+  public Args(final String[] args) {
     this.args = args;
   }
 
@@ -60,10 +60,10 @@ public class Args implements Serializable {
   }
 
   /**
-   * @param numargs
-   * @return true if that may args are available
+   * @param numargs we want
+   * @return true if that many args are available
    */
-  public boolean test(int numargs) {
+  public boolean test(final int numargs) {
     return (pos + numargs) <= args.length;
   }
 
@@ -75,28 +75,27 @@ public class Args implements Serializable {
   }
 
   /**
-   * @param val
+   * @param val to match
    * @return true if the next arg matches the string
-   * @throws Exception
    */
-  public boolean ifMatch(String val) throws Exception {
+  public boolean ifMatch(final String val) {
     return ifMatch(val, 1);
   }
 
   /**
-   * @param val
-   * @param numargs
+   * @param val to match
+   * @param numargs required number of args
    * @return true if the next arg matches the string and has a sufficient number
    *     of parameters
-   * @throws Exception
    */
-  public boolean ifMatch(String val, int numargs) throws Exception {
+  public boolean ifMatch(final String val,
+                         final int numargs)  {
     if (!current().equals(val)) {
       return false;
     }
 
     if (!test(numargs)) {
-      throw new Exception("Invalid args");
+      throw new RuntimeException("Invalid args");
     }
 
     pos++;
