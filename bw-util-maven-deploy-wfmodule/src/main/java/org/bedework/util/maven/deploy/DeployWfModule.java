@@ -92,20 +92,23 @@ public class DeployWfModule extends AbstractMojo {
     @Parameter
     private String type;
 
+    @Parameter
+    private List<String> moduleDependencies;
+
     public String toString() {
       final StringBuilder sb = new StringBuilder(
               this.getClass().getSimpleName());
 
       sb.append("{");
-      sb.append("moduleName");
+      sb.append("moduleName=");
       sb.append(moduleName);
-      sb.append(", groupId");
+      sb.append(", groupId=");
       sb.append(groupId);
-      sb.append(", artifactId");
+      sb.append(", artifactId=");
       sb.append(artifactId);
-      sb.append(", version");
+      sb.append(", version=");
       sb.append(version);
-      sb.append(". type");
+      sb.append(". type=");
       sb.append(type);
       sb.append("}");
 
@@ -170,7 +173,8 @@ public class DeployWfModule extends AbstractMojo {
                   resolve(jd.version);
           deployModule(jd.moduleName,
                        repoDir.toAbsolutePath().toString(),
-                       jd.artifactId, jd.type, null);
+                       jd.artifactId, jd.type,
+                       jd.moduleDependencies);
         }
       }
 
@@ -226,8 +230,10 @@ public class DeployWfModule extends AbstractMojo {
 
         // Is the deployed version the same or later?
         if (!fn.laterThan(mfn)) {
-          utils.info(format("Deployed version %s same as or later than %s: skipping",
-                            mfn.getVersion(), fn.getVersion()));
+          utils.info(format("%s version %s same as or later than %s: skipping",
+                            fn.getName(),
+                            mfn.getVersion(),
+                            fn.getVersion()));
           return;
         }
 
