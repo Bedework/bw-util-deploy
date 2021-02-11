@@ -5,13 +5,11 @@ package org.bedework.util.maven.deploy;
 
 import org.bedework.util.deployment.SplitName;
 import org.bedework.util.deployment.Utils;
-import org.bedework.util.deployment.XmlFile;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.w3c.dom.Element;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -28,34 +26,6 @@ import static java.lang.String.format;
  */
 @Mojo(name = "bw-deploy-wfmodule")
 public class DeployWfModule extends AbstractMojo {
-  private static final String moduleXmlStr =
-          "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-          "<!--\n" +
-          "  ~ JBoss, Home of Professional Open Source.\n" +
-          "  ~ Copyright 2010, Red Hat, Inc., and individual contributors\n" +
-          "  ~ as indicated by the @author tags. See the copyright.txt file in the\n" +
-          "  ~ distribution for a full listing of individual contributors.\n" +
-          "  ~\n" +
-          "  ~ This is free software; you can redistribute it and/or modify it\n" +
-          "  ~ under the terms of the GNU Lesser General Public License as\n" +
-          "  ~ published by the Free Software Foundation; either version 2.1 of\n" +
-          "  ~ the License, or (at your option) any later version.\n" +
-          "  ~\n" +
-          "  ~ This software is distributed in the hope that it will be useful,\n" +
-          "  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of\n" +
-          "  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU\n" +
-          "  ~ Lesser General Public License for more details.\n" +
-          "  ~\n" +
-          "  ~ You should have received a copy of the GNU Lesser General Public\n" +
-          "  ~ License along with this software; if not, write to the Free\n" +
-          "  ~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA\n" +
-          "  ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.\n" +
-          "  -->\n" +
-          "<module xmlns=\"urn:jboss:module:1.7\">\n" +
-          "    <resources>\n" +
-          "    </resources>\n" +
-          "\n" +
-          "</module>\n";
   @Parameter(defaultValue = "${project.build.directory}", readonly = true)
   private String target;
 
@@ -74,13 +44,7 @@ public class DeployWfModule extends AbstractMojo {
   @Parameter(defaultValue = "false")
   private boolean deployModules;
 
-  public static class JarDependency {
-    /**
-     * Name of the module - e.g com.fasterxml.jackson.core.annotations
-     */
-    @Parameter
-    private String moduleName;
-
+  public static class FileInfo {
     @Parameter
     private String groupId;
 
@@ -89,11 +53,113 @@ public class DeployWfModule extends AbstractMojo {
 
     @Parameter
     private String version;
-    @Parameter
+
+    @Parameter(defaultValue = "jar")
     private String type;
+
+    private String repository;
+
+    FileInfo() {}
+
+    FileInfo(final String groupId,
+             final String artifactId,
+             final String version,
+             final String type,
+             final String repository) {
+      this.groupId = groupId;
+      this.artifactId = artifactId;
+      this.version = version;
+      this.type = type;
+      this.repository = repository;
+    }
+
+    String getGroupId() {
+      return groupId;
+    }
+
+    String getArtifactId() {
+      return artifactId;
+    }
+
+    String getVersion() {
+      return version;
+    }
+
+    public void setVersion(final String val) {
+      version = val;
+    }
+
+    String getType() {
+      return type;
+    }
+
+    public String getRepository() {
+      return repository;
+    }
+
+    public void setRepository(final String val) {
+      repository = val;
+    }
+
+    Path getRepoDir() {
+      return Paths.get(getRepository())
+                  .resolve(getGroupId().replace('.', '/'))
+                  .resolve(getArtifactId())
+                  .resolve(getVersion());
+    }
+
+    public void toStringSegment(final StringBuilder sb) {
+      sb.append(", groupId=");
+      sb.append(getGroupId());
+      sb.append(", artifactId=");
+      sb.append(getArtifactId());
+      sb.append(", version=");
+      sb.append(getVersion());
+      sb.append(". type=");
+      sb.append(getType());
+    }
+
+    public String toString() {
+      final StringBuilder sb = new StringBuilder(
+              this.getClass().getSimpleName());
+
+      sb.append("{");
+      toStringSegment(sb);
+      sb.append("}");
+
+      return sb.toString();
+    }
+  }
+
+  public static class JarDependency extends FileInfo {
+    JarDependency(final String moduleName,
+                  final String groupId,
+                  final String artifactId,
+                  final String version,
+                  final String type,
+                  final String repository,
+                  final List<String> moduleDependencies) {
+      super(groupId, artifactId, version, type, repository);
+      this.moduleName = moduleName;
+      this.moduleDependencies = moduleDependencies;
+    }
+
+    @Parameter
+    private String moduleName;
 
     @Parameter
     private List<String> moduleDependencies;
+
+    /**
+     * Name of the module - e.g com.fasterxml.jackson.core.annotations
+     */
+    String getModuleName() {
+      return moduleName;
+    }
+
+    List<String> getModuleDependencies() {
+      return moduleDependencies;
+    }
 
     public String toString() {
       final StringBuilder sb = new StringBuilder(
@@ -101,20 +167,16 @@ public class DeployWfModule extends AbstractMojo {
 
       sb.append("{");
       sb.append("moduleName=");
-      sb.append(moduleName);
-      sb.append(", groupId=");
-      sb.append(groupId);
-      sb.append(", artifactId=");
-      sb.append(artifactId);
-      sb.append(", version=");
-      sb.append(version);
-      sb.append(". type=");
-      sb.append(type);
+      sb.append(getModuleName());
+      super.toStringSegment(sb);
       sb.append("}");
 
       return sb.toString();
     }
   }
+
+  @Parameter
+  private List<FileInfo> jarResources;
 
   @Parameter
   private List<JarDependency> jarDependencies;
@@ -129,10 +191,10 @@ public class DeployWfModule extends AbstractMojo {
    * The part of the name before the version
    */
   @Parameter
-  private String fileName;
+  private String artifactId;
 
   @Parameter(defaultValue = "jar")
-  private String fileType;
+  private String type;
 
   private Utils utils;
 
@@ -161,29 +223,28 @@ public class DeployWfModule extends AbstractMojo {
       if (isEmpty(jarDependencies)) {
         utils.debug("No jar dependencies");
       } else {
-        for (final JarDependency jd: jarDependencies) {
+        for (final var jd: jarDependencies) {
           utils.debug("Deploy jar dependency " + jd);
-          moduleDependencies.add(jd.moduleName);
+          moduleDependencies.add(jd.getModuleName());
 
           // Find the repo
 
-          final var repoDir = Paths.get(localRepository).
-                  resolve(jd.groupId.replace('.', '/')).
-                  resolve(jd.artifactId).
-                  resolve(jd.version);
-          deployModule(jd.moduleName,
-                       repoDir.toAbsolutePath().toString(),
-                       jd.artifactId, jd.type,
-                       jd.moduleDependencies);
+          jd.setRepository(localRepository);
+          final var repoDir = jd.getRepoDir();
+          deployModule(jd,
+                       null);
         }
       }
 
       // Now deploy the module
-      deployModule(moduleName,
-                   target,
-                   fileName,
-                   fileType,
-                   moduleDependencies);
+      deployModule(new JarDependency(moduleName,
+                                     null, // Groupid
+                                     artifactId,
+                                     null, // version
+                                     type,
+                                     target,
+                                     moduleDependencies),
+                   jarResources);
     } catch (final MojoFailureException mfe) {
       mfe.printStackTrace();
       throw mfe;
@@ -193,81 +254,42 @@ public class DeployWfModule extends AbstractMojo {
     }
   }
 
-  private void deployModule(final String moduleName,
-                            final String pathToFile,
-                            final String fileName,
-                            final String fileType,
-                            final List<String> moduleDependencies) throws MojoFailureException {
+  private void deployModule(final JarDependency fileInfo,
+                            final List<FileInfo> jarResources)
+          throws MojoFailureException {
     try {
-      final File fileDir = utils.directory(pathToFile);
-      final SplitName fn = getFileName(fileDir.toPath(),
-                                       fileName, fileType);
+      final Path pathToModuleMain =
+              Paths.get(wildflyPath)
+                   .resolve("modules")
+                   .resolve(moduleName.replace('.', '/'))
+                   .resolve("main")
+                   .toAbsolutePath();
+      utils.debug("Try to create " + pathToModuleMain);
+      Files.createDirectories(pathToModuleMain);
 
-      if (fn == null) {
-        throw new MojoFailureException(
-                format("Exactly one deployable module is required. " +
-                               "None found at %s with name %s and type %s",
-                       pathToFile, fileName, fileType));
-      }
-
-      utils.debug("Found file " + fn);
-
-      // Find deployed file
-      final Path pathToModule = Paths.get(wildflyPath).
-              resolve("modules").
-              resolve(moduleName.replace('.', '/')).
-                                             resolve("main").
-                                             toAbsolutePath();
-      utils.debug("Try to create " + pathToModule);
-      Files.createDirectories(pathToModule);
-
-      final SplitName mfn = getFileName(pathToModule,
-                                        fileName, fileType);
-      final File mainDir = pathToModule.toFile();
-
-      if (mfn != null) {
-        utils.debug("Found module file " + mfn);
-
-        // Is the deployed version the same or later?
-        if (!fn.laterThan(mfn)) {
-          utils.info(format("%s version %s same as or later than %s: skipping",
-                            fn.getName(),
-                            mfn.getVersion(),
-                            fn.getVersion()));
-          return;
-        }
-
-        // Delete the current deployed version
-        final String[] names = mainDir.list();
-        if (names == null) {
-          throw new MojoFailureException(
-                  "Unable to get list of names in " + mainDir);
-        }
-
-        for (final String name: names) {
-          final File f = utils.fileOrDir(mainDir, name);
-          utils.info("Delete file " + f);
-          utils.deleteAll(f.toPath());
-        }
-      }
-
-      // copy in the file.
-      utils.info(format("Deploy file %s to module %s",
-                        fn.getName(), moduleName));
-      final File theFile = utils.file(fileDir, fn.getName(), true);
-      Files.copy(theFile.toPath(),
-                 mainDir.toPath().resolve(fn.getName()));
+      final List<SplitName> resourceFiles = getFiles(pathToModuleMain);
+      final SplitName fn = deployFile(resourceFiles,
+                                      pathToModuleMain, fileInfo);
 
       // Copy in the module.xml template
-      final Path xmlPath = mainDir.toPath().resolve("module.xml");
+      final Path xmlPath = pathToModuleMain.resolve("module.xml");
 
-      Files.writeString(xmlPath, moduleXmlStr);
+      Files.writeString(xmlPath, ModuleXml.moduleXmlStr);
 
       final var moduleXml =
               new ModuleXml(utils,
-                            xmlPath.toAbsolutePath().toString(),
+                            xmlPath,
                             moduleName);
       moduleXml.addResource(fn.getName());
+
+      if (jarResources != null) {
+        for (final var jr: jarResources) {
+          final SplitName jrFn = deployFile(resourceFiles,
+                                            pathToModuleMain,
+                                            jr);
+          moduleXml.addResource(jrFn.getName());
+        }
+      }
 
       if (!isEmpty(moduleDependencies)) {
         for (final var m: moduleDependencies) {
@@ -284,47 +306,71 @@ public class DeployWfModule extends AbstractMojo {
     }
   }
 
-  private static class ModuleXml extends XmlFile {
-    public ModuleXml(final Utils utils,
-                     final String path,
-                     final String moduleName) throws Throwable {
-      super(utils, path, true);
+  /*
+     returns the SplitName for
+   */
+  private SplitName deployFile(final List<SplitName> resourceFiles,
+                               final Path pathToModuleMain,
+                               final FileInfo fileInfo)
+          throws MojoFailureException {
+    try {
+      final Path pathToFile = fileInfo.getRepoDir();
+      //final File fileDir = utils.directory(pathToFile);
+      final SplitName fn = matchFile(pathToFile, fileInfo);
 
-      root.setAttribute("name", moduleName);
-      updated = true;
-    }
-
-    void addResource(final String name) throws Throwable {
-      final Element el = findElement(root, "resources");
-      if (el == null) {
-        utils.error("Cannot locate element resources");
-        return;
+      if (fn == null) {
+        throw new MojoFailureException(
+                format("Exactly one deployable module is required. " +
+                               "None found at %s with name %s and type %s",
+                       pathToFile,
+                       fileInfo.getArtifactId(),
+                       fileInfo.getType()));
       }
 
-      final Element resNode = doc.createElement("resource-root");
-      resNode.setAttribute("path",
-                           name);
+      utils.debug("Found file " + fn);
 
-      el.appendChild(resNode);
-    }
+      // Find deployed file
+      final SplitName mfn = matchFile(resourceFiles, fileInfo);
+      final File mainDir = pathToModuleMain.toFile();
 
-    void addDependency(final String name) throws Throwable {
-      Element el = findElement(root, "dependencies");
-      if (el == null) {
-        el = doc.createElement("dependencies");
-        root.appendChild(el);
+      if (mfn != null) {
+        utils.debug("Found module file " + mfn);
+
+        // Is the deployed version the same or later?
+        if (!fn.laterThan(mfn)) {
+          utils.info(format("%s version %s same as or later than %s: skipping",
+                            fn.getName(),
+                            mfn.getVersion(),
+                            fn.getVersion()));
+          return fn;
+        }
+
+        // Delete the current deployed version
+        final File f = utils.fileOrDir(mainDir, mfn.getName());
+        utils.info("Delete file " + f);
+        utils.deleteAll(f.toPath());
+        resourceFiles.remove(mfn);
       }
 
-      final Element mNode = doc.createElement("module");
-      mNode.setAttribute("name", name);
+      // copy in the file.
+      utils.info(format("Deploy file %s to module %s",
+                        fn.getName(), moduleName));
+      final File theFile = utils.file(pathToFile.toFile(),
+                                      fn.getName(), true);
+      Files.copy(theFile.toPath(),
+                 mainDir.toPath().resolve(fn.getName()));
 
-      el.appendChild(mNode);
+      return fn;
+    } catch (final MojoFailureException mfe) {
+      throw mfe;
+    } catch (final Throwable t) {
+      t.printStackTrace();
+      throw new MojoFailureException(t.getMessage());
     }
   }
 
-  private SplitName getFileName(final Path pathToFile,
-                                final String fileName,
-                                final String fileType) throws Throwable {
+  private List<SplitName> getFiles(final Path pathToFile)
+          throws MojoFailureException {
     final var dir = pathToFile.toFile();
     utils.debug("Get names from dir " + dir);
     final String[] names;
@@ -332,7 +378,7 @@ public class DeployWfModule extends AbstractMojo {
       names = dir.list();
     } catch (final Throwable t) {
       t.printStackTrace();
-      throw t;
+      throw new MojoFailureException(t.getMessage());
     }
 
     if (names == null) {
@@ -340,7 +386,7 @@ public class DeployWfModule extends AbstractMojo {
       return null;
     }
 
-    SplitName module = null;
+    final List<SplitName> files = new ArrayList<>();
 
     for (final String nm: names) {
       utils.debug("Found " + nm);
@@ -353,37 +399,74 @@ public class DeployWfModule extends AbstractMojo {
 
       // Should we skip?
       if (nm.endsWith("-sources.jar") ||
-         nm.endsWith(".sha1") ||
-         nm.endsWith(".pom")) {
+              nm.endsWith(".sha1") ||
+              nm.endsWith(".pom")) {
         continue;
       }
 
-      if (fileName != null) {
-        if (!fileName.equals(sn.getPrefix())) {
+      files.add(sn);
+    }
+
+    return files;
+  }
+
+  /** Look for a file with the same prefix and type as the param
+   *
+   * @param pathToFile where we look
+   * @param fileInfo for name and/or type
+   * @return SplitName of single matching file or null
+   * @throws MojoFailureException on fatal error
+   */
+  private SplitName matchFile(final Path pathToFile,
+                              final FileInfo fileInfo)
+          throws MojoFailureException {
+    return matchFile(getFiles(pathToFile), fileInfo);
+  }
+
+  /** Look for a file with the same prefix and type as the param
+   *
+   * @param files list of files to check
+   * @param fileInfo for name and/or type
+   * @return SplitName of single matching file or null
+   * @throws MojoFailureException on fatal error
+   */
+  private SplitName matchFile(final List<SplitName> files,
+                              final FileInfo fileInfo)
+          throws MojoFailureException {
+    if (files == null) {
+      return null;
+    }
+
+    SplitName file = null;
+
+    for (final SplitName sn: files) {
+      if (fileInfo.getArtifactId() != null) {
+        if (!fileInfo.getArtifactId().equals(sn.getPrefix())) {
           continue;
         }
 
-        if (module != null) {
+        if (file != null) {
           return null;
         }
 
-        module = sn;
+        file = sn;
         continue;
       }
 
-      if ((fileType != null) && !fileType.equals(sn.getSuffix())) {
+      if ((fileInfo.getType() != null) &&
+              !fileInfo.getType().equals(sn.getSuffix())) {
         continue;
       }
 
-      if (module != null) {
+      if (file != null) {
         throw new MojoFailureException(
-                "Exactly one deployable module is required");
+                "Exactly one deployable module resource of given name is required");
       }
 
-      module = sn;
+      file = sn;
     }
 
-    return module;
+    return file;
   }
 
   public static boolean isEmpty(final Collection<?> val) {
