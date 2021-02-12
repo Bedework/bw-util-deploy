@@ -59,7 +59,7 @@ public class DeployWfModule extends AbstractMojo {
 
     private String repository;
 
-    FileInfo() {}
+    public FileInfo() {}
 
     FileInfo(final String groupId,
              final String artifactId,
@@ -101,7 +101,14 @@ public class DeployWfModule extends AbstractMojo {
       repository = val;
     }
 
-    Path getRepoDir() {
+    Path getRepoDir() throws MojoFailureException {
+      if ((getRepository() == null) ||
+              (getGroupId() == null) ||
+              (getArtifactId() == null) ||
+              (getVersion() == null)) {
+        throw new MojoFailureException("Insufficient information for " + this);
+      }
+
       return Paths.get(getRepository())
                   .resolve(getGroupId().replace('.', '/'))
                   .resolve(getArtifactId())
@@ -109,13 +116,15 @@ public class DeployWfModule extends AbstractMojo {
     }
 
     public void toStringSegment(final StringBuilder sb) {
+      sb.append("repository=");
+      sb.append(getRepository());
       sb.append(", groupId=");
       sb.append(getGroupId());
       sb.append(", artifactId=");
       sb.append(getArtifactId());
       sb.append(", version=");
       sb.append(getVersion());
-      sb.append(". type=");
+      sb.append(", type=");
       sb.append(getType());
     }
 
@@ -132,6 +141,9 @@ public class DeployWfModule extends AbstractMojo {
   }
 
   public static class JarDependency extends FileInfo {
+    // For maven
+    public JarDependency() {}
+
     JarDependency(final String moduleName,
                   final String groupId,
                   final String artifactId,
@@ -142,6 +154,19 @@ public class DeployWfModule extends AbstractMojo {
       super(groupId, artifactId, version, type, repository);
       this.moduleName = moduleName;
       this.moduleDependencies = moduleDependencies;
+    }
+
+    static JarDependency fromFileInfo(final String moduleName,
+                                      final FileInfo fileInfo,
+                                      final String repository,
+                                      final List<String> moduleDependencies) {
+      return new JarDependency(moduleName,
+                               fileInfo.getGroupId(),
+                               fileInfo.getArtifactId(),
+                               fileInfo.getVersion(),
+                               fileInfo.getType(),
+                               repository,
+                               moduleDependencies);
     }
 
     @Parameter
@@ -168,6 +193,7 @@ public class DeployWfModule extends AbstractMojo {
       sb.append("{");
       sb.append("moduleName=");
       sb.append(getModuleName());
+      sb.append(", ");
       super.toStringSegment(sb);
       sb.append("}");
 
@@ -187,14 +213,8 @@ public class DeployWfModule extends AbstractMojo {
   @Parameter(required = true)
   private String moduleName;
 
-  /**
-   * The part of the name before the version
-   */
-  @Parameter
-  private String artifactId;
-
-  @Parameter(defaultValue = "jar")
-  private String type;
+  @Parameter(required = true)
+  private FileInfo artifact;
 
   private Utils utils;
 
@@ -230,20 +250,18 @@ public class DeployWfModule extends AbstractMojo {
           // Find the repo
 
           jd.setRepository(localRepository);
-          final var repoDir = jd.getRepoDir();
           deployModule(jd,
+                       jd.getRepoDir(),
                        null);
         }
       }
 
       // Now deploy the module
-      deployModule(new JarDependency(moduleName,
-                                     null, // Groupid
-                                     artifactId,
-                                     null, // version
-                                     type,
-                                     target,
-                                     moduleDependencies),
+      deployModule(JarDependency.fromFileInfo(moduleName,
+                                              artifact,
+                                              target,
+                                              moduleDependencies),
+                   Paths.get(target),
                    jarResources);
     } catch (final MojoFailureException mfe) {
       mfe.printStackTrace();
@@ -255,13 +273,14 @@ public class DeployWfModule extends AbstractMojo {
   }
 
   private void deployModule(final JarDependency fileInfo,
+                            final Path pathToFile,
                             final List<FileInfo> jarResources)
           throws MojoFailureException {
     try {
       final Path pathToModuleMain =
               Paths.get(wildflyPath)
                    .resolve("modules")
-                   .resolve(moduleName.replace('.', '/'))
+                   .resolve(fileInfo.getModuleName().replace('.', '/'))
                    .resolve("main")
                    .toAbsolutePath();
       utils.debug("Try to create " + pathToModuleMain);
@@ -269,7 +288,9 @@ public class DeployWfModule extends AbstractMojo {
 
       final List<SplitName> resourceFiles = getFiles(pathToModuleMain);
       final SplitName fn = deployFile(resourceFiles,
-                                      pathToModuleMain, fileInfo);
+                                      pathToModuleMain,
+                                      pathToFile,
+                                      fileInfo);
 
       // Copy in the module.xml template
       final Path xmlPath = pathToModuleMain.resolve("module.xml");
@@ -284,8 +305,10 @@ public class DeployWfModule extends AbstractMojo {
 
       if (jarResources != null) {
         for (final var jr: jarResources) {
+          jr.setRepository(localRepository);
           final SplitName jrFn = deployFile(resourceFiles,
                                             pathToModuleMain,
+                                            jr.getRepoDir(),
                                             jr);
           moduleXml.addResource(jrFn.getName());
         }
@@ -311,10 +334,10 @@ public class DeployWfModule extends AbstractMojo {
    */
   private SplitName deployFile(final List<SplitName> resourceFiles,
                                final Path pathToModuleMain,
+                               final Path pathToFile,
                                final FileInfo fileInfo)
           throws MojoFailureException {
     try {
-      final Path pathToFile = fileInfo.getRepoDir();
       //final File fileDir = utils.directory(pathToFile);
       final SplitName fn = matchFile(pathToFile, fileInfo);
 
