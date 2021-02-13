@@ -10,6 +10,7 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -29,177 +30,24 @@ public class DeployWfModule extends AbstractMojo {
   @Parameter(defaultValue = "${project.build.directory}", readonly = true)
   private String target;
 
+  @Parameter(defaultValue = "${project}", readonly = true, required = true)
+  private MavenProject project;
+
   @Parameter(defaultValue = "${settings.localRepository}")
   private String localRepository;
 
   /**
    * Location of the wildfly instance
    */
-  @Parameter(required = true)
+  @Parameter(required = true,
+          defaultValue = "${org.bedework.deployment.basedir}/wildfly")
   private String wildflyPath;
 
   @Parameter
   private boolean debug;
 
-  @Parameter(defaultValue = "false")
+  @Parameter(defaultValue = "${org.bedework.deploy.modules}")
   private boolean deployModules;
-
-  public static class FileInfo {
-    @Parameter
-    private String groupId;
-
-    @Parameter
-    private String artifactId;
-
-    @Parameter
-    private String version;
-
-    @Parameter(defaultValue = "jar")
-    private String type;
-
-    private String repository;
-
-    public FileInfo() {}
-
-    FileInfo(final String groupId,
-             final String artifactId,
-             final String version,
-             final String type,
-             final String repository) {
-      this.groupId = groupId;
-      this.artifactId = artifactId;
-      this.version = version;
-      this.type = type;
-      this.repository = repository;
-    }
-
-    String getGroupId() {
-      return groupId;
-    }
-
-    String getArtifactId() {
-      return artifactId;
-    }
-
-    String getVersion() {
-      return version;
-    }
-
-    public void setVersion(final String val) {
-      version = val;
-    }
-
-    String getType() {
-      return type;
-    }
-
-    public String getRepository() {
-      return repository;
-    }
-
-    public void setRepository(final String val) {
-      repository = val;
-    }
-
-    Path getRepoDir() throws MojoFailureException {
-      if ((getRepository() == null) ||
-              (getGroupId() == null) ||
-              (getArtifactId() == null) ||
-              (getVersion() == null)) {
-        throw new MojoFailureException("Insufficient information for " + this);
-      }
-
-      return Paths.get(getRepository())
-                  .resolve(getGroupId().replace('.', '/'))
-                  .resolve(getArtifactId())
-                  .resolve(getVersion());
-    }
-
-    public void toStringSegment(final StringBuilder sb) {
-      sb.append("repository=");
-      sb.append(getRepository());
-      sb.append(", groupId=");
-      sb.append(getGroupId());
-      sb.append(", artifactId=");
-      sb.append(getArtifactId());
-      sb.append(", version=");
-      sb.append(getVersion());
-      sb.append(", type=");
-      sb.append(getType());
-    }
-
-    public String toString() {
-      final StringBuilder sb = new StringBuilder(
-              this.getClass().getSimpleName());
-
-      sb.append("{");
-      toStringSegment(sb);
-      sb.append("}");
-
-      return sb.toString();
-    }
-  }
-
-  public static class JarDependency extends FileInfo {
-    // For maven
-    public JarDependency() {}
-
-    JarDependency(final String moduleName,
-                  final String groupId,
-                  final String artifactId,
-                  final String version,
-                  final String type,
-                  final String repository,
-                  final List<String> moduleDependencies) {
-      super(groupId, artifactId, version, type, repository);
-      this.moduleName = moduleName;
-      this.moduleDependencies = moduleDependencies;
-    }
-
-    static JarDependency fromFileInfo(final String moduleName,
-                                      final FileInfo fileInfo,
-                                      final String repository,
-                                      final List<String> moduleDependencies) {
-      return new JarDependency(moduleName,
-                               fileInfo.getGroupId(),
-                               fileInfo.getArtifactId(),
-                               fileInfo.getVersion(),
-                               fileInfo.getType(),
-                               repository,
-                               moduleDependencies);
-    }
-
-    @Parameter
-    private String moduleName;
-
-    @Parameter
-    private List<String> moduleDependencies;
-
-    /**
-     * Name of the module - e.g com.fasterxml.jackson.core.annotations
-     */
-    String getModuleName() {
-      return moduleName;
-    }
-
-    List<String> getModuleDependencies() {
-      return moduleDependencies;
-    }
-
-    public String toString() {
-      final StringBuilder sb = new StringBuilder(
-              this.getClass().getSimpleName());
-
-      sb.append("{");
-      sb.append("moduleName=");
-      sb.append(getModuleName());
-      sb.append(", ");
-      super.toStringSegment(sb);
-      sb.append("}");
-
-      return sb.toString();
-    }
-  }
 
   @Parameter
   private List<FileInfo> jarResources;
@@ -213,7 +61,7 @@ public class DeployWfModule extends AbstractMojo {
   @Parameter(required = true)
   private String moduleName;
 
-  @Parameter(required = true)
+  @Parameter
   private FileInfo artifact;
 
   private Utils utils;
@@ -227,11 +75,26 @@ public class DeployWfModule extends AbstractMojo {
       return;
     }
 
-    utils = new Utils(getLog());
+    final var logger = getLog();
+    utils = new Utils(logger);
 
+    debug = logger.isDebugEnabled();
     if (debug) {
       utils.setDebug(true);
     }
+
+    final var model = project.getModel();
+
+    if (artifact == null) {
+      artifact = new FileInfo(model.getGroupId(),
+                              model.getArtifactId(),
+                              model.getVersion(),
+                              "jar",
+                              null);
+    }
+
+    utils.info(format("Deploy module %s with artifact %s",
+                      moduleName, project.getModel().getArtifactId()));
 
     try {
       if (moduleDependencies == null) {
@@ -314,8 +177,8 @@ public class DeployWfModule extends AbstractMojo {
         }
       }
 
-      if (!isEmpty(moduleDependencies)) {
-        for (final var m: moduleDependencies) {
+      if (fileInfo.getModuleDependencies() != null) {
+        for (final var m: fileInfo.getModuleDependencies()) {
           moduleXml.addDependency(m);
         }
       }
