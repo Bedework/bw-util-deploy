@@ -222,9 +222,10 @@ public class DeployWfModule extends AbstractMojo {
       if (mfn != null) {
         utils.debug("Found module file " + mfn);
 
-        // Is the deployed version the same or later?
-        if (!fn.laterThan(mfn)) {
-          utils.info(format("%s version %s same as or later than %s: skipping",
+        // Is the deployed version later?
+        // Deploy if same to allow for updates.
+        if (mfn.laterThan(fn)) {
+          utils.info(format("%s version %s later than %s: skipping",
                             fn.getName(),
                             mfn.getVersion(),
                             fn.getVersion()));
@@ -279,7 +280,7 @@ public class DeployWfModule extends AbstractMojo {
       final SplitName sn = SplitName.testName(nm);
 
       if (sn == null) {
-        //utils.warn("Unable to process " + nm);
+        utils.debug("Unable to process " + nm);
         continue;
       }
 
@@ -290,6 +291,7 @@ public class DeployWfModule extends AbstractMojo {
         continue;
       }
 
+      utils.debug("Adding " + sn);
       files.add(sn);
     }
 
@@ -319,6 +321,7 @@ public class DeployWfModule extends AbstractMojo {
   private SplitName matchFile(final List<SplitName> files,
                               final FileInfo fileInfo)
           throws MojoFailureException {
+    utils.debug("Match " + fileInfo);
     if (files == null) {
       return null;
     }
@@ -326,16 +329,9 @@ public class DeployWfModule extends AbstractMojo {
     SplitName file = null;
 
     for (final SplitName sn: files) {
-      if (fileInfo.getArtifactId() != null) {
-        if (!fileInfo.getArtifactId().equals(sn.getPrefix())) {
-          continue;
-        }
-
-        if (file != null) {
-          return null;
-        }
-
-        file = sn;
+      utils.debug("Try " + sn);
+      if ((fileInfo.getArtifactId() != null) &&
+         !fileInfo.getArtifactId().equals(sn.getPrefix())) {
         continue;
       }
 

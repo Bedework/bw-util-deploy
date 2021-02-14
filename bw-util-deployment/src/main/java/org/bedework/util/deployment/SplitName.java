@@ -31,7 +31,7 @@ import java.util.List;
  * "bw-" part of the name</p>
  *
  */
-public class SplitName {
+public class SplitName implements Comparable<SplitName> {
   private final String name;
 
   private final String prefix;
@@ -181,22 +181,61 @@ public class SplitName {
     return version;
   }
 
+  @Override
+  public int compareTo(final SplitName that) {
+    int res = compareStrings(getPrefix(),
+                             that.getPrefix());
+    if (res != 0) {
+      return res;
+    }
+
+    res = compareStrings(getSuffix(),
+                         that.getSuffix());
+    if (res != 0) {
+      return res;
+    }
+
+    return compareStrings(getVersion(),
+                          that.getVersion());
+  }
+
+  public boolean equals(final Object o) {
+    if (!(o instanceof SplitName)) {
+      return false;
+    }
+
+    return compareTo((SplitName)o) == 0;
+  }
+
   public String toString() {
     final StringBuilder sb = new StringBuilder(
             this.getClass().getSimpleName());
 
     sb.append("{");
-    sb.append("name");
-    sb.append(getName());
-    sb.append(", prefix");
-    sb.append(prefix);
-    sb.append(", version");
-    sb.append(getVersion());
-    sb.append(", suffix");
-    sb.append(getSuffix());
+    sb.append("name=").append(getName());
+    sb.append(", prefix=").append(prefix);
+    sb.append(", version=").append(getVersion());
+    sb.append(", suffix=").append(getSuffix());
     sb.append("}");
 
     return sb.toString();
+  }
+
+  private static int compareStrings(final String s1,
+                                    final String s2) {
+    if (s1 == null) {
+      if (s2 != null) {
+        return -1;
+      }
+
+      return 0;
+    }
+
+    if (s2 == null) {
+      return 1;
+    }
+
+    return s1.compareTo(s2);
   }
 }
 
