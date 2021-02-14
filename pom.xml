@@ -26,6 +26,7 @@
     <junit.version>4.8.2</junit.version>
     <servlet-api.version>4.0.0</servlet-api.version>
 
+    <maven.version>3.6.1</maven.version>
     <maven-plugin-annotations.version>3.6.0</maven-plugin-annotations.version>
     <maven-plugin-api.version>3.6.1</maven-plugin-api.version>
 
@@ -113,6 +114,12 @@
         <artifactId>javax.servlet-api</artifactId>
         <version>${servlet-api.version}</version>
         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.maven</groupId>
+        <artifactId>maven-core</artifactId>
+        <version>${maven.version}</version>
       </dependency>
 
       <dependency>
