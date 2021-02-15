@@ -6,10 +6,13 @@ package org.bedework.util.maven.deploy;
 import org.bedework.util.deployment.SplitName;
 import org.bedework.util.deployment.Utils;
 
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
@@ -25,7 +28,10 @@ import static java.lang.String.format;
 /**
  * User: mike Date: 12/18/15 Time: 00:15
  */
-@Mojo(name = "bw-deploy-wfmodule")
+@Mojo(name = "bw-deploy-wfmodule",
+        defaultPhase = LifecyclePhase.INSTALL,
+        requiresDependencyCollection = ResolutionScope.COMPILE_PLUS_RUNTIME,
+        requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class DeployWfModule extends AbstractMojo {
   @Parameter(defaultValue = "${project.build.directory}", readonly = true)
   private String target;
@@ -64,6 +70,12 @@ public class DeployWfModule extends AbstractMojo {
   @Parameter
   private FileInfo artifact;
 
+  /**
+   * Set true if we are just building modules from jar dependencies
+   */
+  @Parameter(defaultValue = "false")
+  private boolean noArtifact;
+
   private Utils utils;
 
   public DeployWfModule() {
@@ -73,6 +85,14 @@ public class DeployWfModule extends AbstractMojo {
   public void execute() throws MojoFailureException {
     if (!deployModules) {
       return;
+    }
+
+    final List<FileArtifact> fileArtifacts = new ArrayList<>();
+
+    // Build a list of all dependencies
+    // artifact.getFile()) needs requiresDependencyResolution
+    for (final Artifact artifact: project.getArtifacts()) {
+      fileArtifacts.add(FileArtifact.fromMavenArtifact(artifact));
     }
 
     final var logger = getLog();
@@ -85,16 +105,22 @@ public class DeployWfModule extends AbstractMojo {
 
     final var model = project.getModel();
 
-    if (artifact == null) {
-      artifact = new FileInfo(model.getGroupId(),
-                              model.getArtifactId(),
-                              model.getVersion(),
-                              "jar",
-                              null);
-    }
+    if (noArtifact) {
+      utils.info(format("Deploy module %s with no artifact",
+                        moduleName));
+    } else {
+      if (artifact == null) {
+        artifact = new FileInfo(model.getGroupId(),
+                                model.getArtifactId(),
+                                model.getVersion(),
+                                "jar",
+                                null);
+      }
 
-    utils.info(format("Deploy module %s with artifact %s",
-                      moduleName, project.getModel().getArtifactId()));
+      utils.info(format("Deploy module %s with artifact %s",
+                        moduleName,
+                        project.getModel().getArtifactId()));
+    }
 
     try {
       if (moduleDependencies == null) {
@@ -119,13 +145,15 @@ public class DeployWfModule extends AbstractMojo {
         }
       }
 
-      // Now deploy the module
-      deployModule(JarDependency.fromFileInfo(moduleName,
-                                              artifact,
-                                              target,
-                                              moduleDependencies),
-                   Paths.get(target),
-                   jarResources);
+      if (!noArtifact) {
+        // Now deploy the module
+        deployModule(JarDependency.fromFileInfo(moduleName,
+                                                artifact,
+                                                target,
+                                                moduleDependencies),
+                     Paths.get(target),
+                     jarResources);
+      }
     } catch (final MojoFailureException mfe) {
       mfe.printStackTrace();
       throw mfe;
@@ -149,7 +177,8 @@ public class DeployWfModule extends AbstractMojo {
       utils.debug("Try to create " + pathToModuleMain);
       Files.createDirectories(pathToModuleMain);
 
-      final List<SplitName> resourceFiles = getFiles(pathToModuleMain);
+      final List<SplitName> resourceFiles =
+              utils.getFiles(pathToModuleMain);
       final SplitName fn = deployFile(resourceFiles,
                                       pathToModuleMain,
                                       pathToFile,
@@ -163,7 +192,7 @@ public class DeployWfModule extends AbstractMojo {
       final var moduleXml =
               new ModuleXml(utils,
                             xmlPath,
-                            moduleName);
+                            fileInfo.getModuleName());
       moduleXml.addResource(fn.getName());
 
       if (jarResources != null) {
@@ -256,48 +285,6 @@ public class DeployWfModule extends AbstractMojo {
     }
   }
 
-  private List<SplitName> getFiles(final Path pathToFile)
-          throws MojoFailureException {
-    final var dir = pathToFile.toFile();
-    utils.debug("Get names from dir " + dir);
-    final String[] names;
-    try {
-      names = dir.list();
-    } catch (final Throwable t) {
-      t.printStackTrace();
-      throw new MojoFailureException(t.getMessage());
-    }
-
-    if (names == null) {
-      utils.debug("No entries in list");
-      return null;
-    }
-
-    final List<SplitName> files = new ArrayList<>();
-
-    for (final String nm: names) {
-      utils.debug("Found " + nm);
-      final SplitName sn = SplitName.testName(nm);
-
-      if (sn == null) {
-        utils.debug("Unable to process " + nm);
-        continue;
-      }
-
-      // Should we skip?
-      if (nm.endsWith("-sources.jar") ||
-              nm.endsWith(".sha1") ||
-              nm.endsWith(".pom")) {
-        continue;
-      }
-
-      utils.debug("Adding " + sn);
-      files.add(sn);
-    }
-
-    return files;
-  }
-
   /** Look for a file with the same prefix and type as the param
    *
    * @param pathToFile where we look
@@ -308,7 +295,7 @@ public class DeployWfModule extends AbstractMojo {
   private SplitName matchFile(final Path pathToFile,
                               final FileInfo fileInfo)
           throws MojoFailureException {
-    return matchFile(getFiles(pathToFile), fileInfo);
+    return matchFile(utils.getFiles(pathToFile), fileInfo);
   }
 
   /** Look for a file with the same prefix and type as the param
@@ -331,12 +318,12 @@ public class DeployWfModule extends AbstractMojo {
     for (final SplitName sn: files) {
       utils.debug("Try " + sn);
       if ((fileInfo.getArtifactId() != null) &&
-         !fileInfo.getArtifactId().equals(sn.getPrefix())) {
+         !fileInfo.getArtifactId().equals(sn.getArtifactId())) {
         continue;
       }
 
       if ((fileInfo.getType() != null) &&
-              !fileInfo.getType().equals(sn.getSuffix())) {
+              !fileInfo.getType().equals(sn.getType())) {
         continue;
       }
 

@@ -23,58 +23,58 @@ import java.util.List;
  *
  * anapp-3.10.5.war
  *
- * has prefix = "anapp"
+ * has artifactId = "anapp"
  * version = "3.10.5"
- * suffix = "."
+ * type = "war"
  *
- * <p>Note the prefix must be longer than 3 characters - to avoid the
+ * <p>Note the artifactId must be longer than 3 characters - to avoid the
  * "bw-" part of the name</p>
  *
  */
 public class SplitName implements Comparable<SplitName> {
   private final String name;
 
-  private final String prefix;
+  private final String artifactId;
   private String version;
-  private String suffix;
+  private String type;
 
   SplitName(final String name,
-            final String prefix) {
+            final String artifactId) {
     this.name = name;
-    this.prefix = prefix;
+    this.artifactId = artifactId;
 
-    final int dashPos = prefix.length();
-    if (name.charAt(prefix.length()) != '-') {
-      throw new RuntimeException("Bad name/prefix");
+    final int dashPos = artifactId.length();
+    if (name.charAt(artifactId.length()) != '-') {
+      throw new RuntimeException("Bad name/artifactId");
     }
 
     final int dotPos = name.lastIndexOf(".");
 
     if (dotPos > 0) {
       version = name.substring(dashPos + 1, dotPos);
-      suffix = name.substring(dotPos + 1);
+      type = name.substring(dotPos + 1);
     } else {
       version = name.substring(dashPos + 1);
     }
   }
 
   SplitName(final String name,
-            final String prefix,
+            final String artifactId,
             final String version,
-            final String suffix) {
-    this(name, prefix);
+            final String type) {
+    this(name, artifactId);
     this.version = version;
-    this.suffix = suffix;
+    this.type = type;
   }
 
-  /** Tries to figure out what the prefix is for the name and then
+  /** Tries to figure out what the artifactId is for the name and then
    * splits it. Assumes we have a "-" in the name.
    *
-   * @param name the prefixed name
+   * @param name the artifact name
    * @return split name or null if unable to split.
    */
   public static SplitName testName(final String name) {
-    /* Try to figure out the prefix */
+    /* Try to figure out the artifactId */
     final int dashPos;
     final int snapShotPos = name.indexOf("-SNAPSHOT");
 
@@ -98,15 +98,15 @@ public class SplitName implements Comparable<SplitName> {
   }
 
   public static SplitName testName(final String name,
-                                   final List<String> prefixes) {
-    for (final String prefix: prefixes) {
-      if (name.startsWith(prefix) &&
+                                   final List<String> artifactIds) {
+    for (final String artifactId: artifactIds) {
+      if (name.startsWith(artifactId) &&
               // Next char must be "-"
-              (name.charAt(prefix.length()) == '-')) {
+              (name.charAt(artifactId.length()) == '-')) {
         final int dotPos = name.lastIndexOf(".");
 
-        if (dotPos > prefix.length()) {
-          return new SplitName(name, prefix);
+        if (dotPos > artifactId.length()) {
+          return new SplitName(name, artifactId);
         }
       }
     }
@@ -117,14 +117,14 @@ public class SplitName implements Comparable<SplitName> {
   /** .
    *
    * @param that SplitName to test
-   * @return true if prefix and suffix match.
+   * @return true if artifactId and type match.
    */
   public boolean sameAs(final SplitName that) {
-    return prefix.equals(that.prefix) &&
-            getSuffix().equals(that.getSuffix());
+    return artifactId.equals(that.artifactId) &&
+            getType().equals(that.getType());
   }
 
-  /** prefix and suffix must match.
+  /** artifactId and type must match.
    *
    * @param that SplitName to test
    * @return true if this version also is greater than that version.
@@ -165,12 +165,12 @@ public class SplitName implements Comparable<SplitName> {
     return !foundSame;
   }
 
-  public String getPrefix() {
-    return prefix;
+  public String getArtifactId() {
+    return artifactId;
   }
 
-  public String getSuffix() {
-    return suffix;
+  public String getType() {
+    return type;
   }
 
   public String getName() {
@@ -183,14 +183,14 @@ public class SplitName implements Comparable<SplitName> {
 
   @Override
   public int compareTo(final SplitName that) {
-    int res = compareStrings(getPrefix(),
-                             that.getPrefix());
+    int res = compareStrings(getArtifactId(),
+                             that.getArtifactId());
     if (res != 0) {
       return res;
     }
 
-    res = compareStrings(getSuffix(),
-                         that.getSuffix());
+    res = compareStrings(getType(),
+                         that.getType());
     if (res != 0) {
       return res;
     }
@@ -213,9 +213,9 @@ public class SplitName implements Comparable<SplitName> {
 
     sb.append("{");
     sb.append("name=").append(getName());
-    sb.append(", prefix=").append(prefix);
+    sb.append(", artifactId=").append(artifactId);
     sb.append(", version=").append(getVersion());
-    sb.append(", suffix=").append(getSuffix());
+    sb.append(", type=").append(getType());
     sb.append("}");
 
     return sb.toString();

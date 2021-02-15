@@ -16,6 +16,7 @@
 package org.bedework.util.deployment;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -38,8 +39,10 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Formatter;
+import java.util.List;
 import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -381,6 +384,48 @@ public class Utils {
 
   }
 
+  public List<SplitName> getFiles(final Path pathToFile)
+          throws MojoFailureException {
+    final var dir = pathToFile.toFile();
+    debug("Get names from dir " + dir);
+    final String[] names;
+    try {
+      names = dir.list();
+    } catch (final Throwable t) {
+      t.printStackTrace();
+      throw new MojoFailureException(t.getMessage());
+    }
+
+    if (names == null) {
+      debug("No entries in list");
+      return null;
+    }
+
+    final List<SplitName> files = new ArrayList<>();
+
+    for (final String nm: names) {
+      debug("Found " + nm);
+      final SplitName sn = SplitName.testName(nm);
+
+      if (sn == null) {
+        debug("Unable to process " + nm);
+        continue;
+      }
+
+      // Should we skip?
+      if (nm.endsWith("-sources.jar") ||
+              nm.endsWith(".sha1") ||
+              nm.endsWith(".pom")) {
+        continue;
+      }
+
+      debug("Adding " + sn);
+      files.add(sn);
+    }
+
+    return files;
+  }
+
   private void copyFile(final Path in,
                         final Path out,
                         final PropertiesChain props) {
@@ -524,7 +569,7 @@ public class Utils {
    */
   void deleteMatching(final String dirPath,
                              final SplitName sn) throws Throwable {
-    if ((sn.getPrefix().length() < 3) || (sn.getSuffix().length() < 3)) {
+    if ((sn.getArtifactId().length() < 3) || (sn.getType().length() < 3)) {
       throw new Exception("Suspect name " + sn);
     }
 
@@ -537,7 +582,7 @@ public class Utils {
     }
 
     for (final String nm: names) {
-      if (nm.startsWith(sn.getPrefix()) && nm.endsWith(sn.getSuffix())) {
+      if (nm.startsWith(sn.getArtifactId()) && nm.endsWith(sn.getType())) {
         final Path p = Paths.get(dirPath, nm);
         deleteAll(p);
       }

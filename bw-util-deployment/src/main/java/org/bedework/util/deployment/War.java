@@ -23,7 +23,7 @@ public class War extends DeployableResource implements Updateable {
              final ApplicationXml appXml,
              final PropertiesChain props,
              final String filterPrefix) throws Throwable {
-    super(utils, path, sn, props, filterPrefix + sn.getPrefix() + ".");
+    super(utils, path, sn, props, filterPrefix + sn.getArtifactId() + ".");
 
     warsonly = Boolean.valueOf(props.get(Process.propWarsOnly));
     this.appXml = appXml;

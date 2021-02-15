@@ -250,19 +250,19 @@ public class Process extends AbstractMojo {
 
       for (final SplitName sn: getDeployedNames(deployDirPath,
                                                 null)) {
-        if (!"war".equals(sn.getSuffix()) && !"ear".equals(
-                sn.getSuffix())) {
+        if (!"war".equals(sn.getType()) && !"ear".equals(
+                sn.getType())) {
           continue;
         }
 
         // Add version to properties for dependencies
         if (utils.debug()) {
           utils.debug("adding org.bedework.global.versions." +
-                              sn.getPrefix() + "=" +
+                              sn.getArtifactId() + "=" +
                               sn.getVersion());
         }
         utils.setVersionsProp("org.bedework.global.versions." + sn
-                                      .getPrefix(),
+                                      .getArtifactId(),
                               sn.getVersion());
       }
 
@@ -383,9 +383,9 @@ public class Process extends AbstractMojo {
     final List<PathAndName> files = new ArrayList<>();
 
     for (final SplitName sn: splitNames) {
-      if (!names.contains(sn.getPrefix())) {
+      if (!names.contains(sn.getArtifactId())) {
         // We were given a specific name and this isn't it
-        utils.warn("Prefix " + sn.getPrefix() +
+        utils.warn("Prefix " + sn.getArtifactId() +
                            " for file " + sn.getName() +
                            " not in properties as deployable file. Skipping");
         continue;
@@ -399,7 +399,7 @@ public class Process extends AbstractMojo {
         }
       }
 
-      if (!allowedNames.contains(sn.getPrefix())) {
+      if (!allowedNames.contains(sn.getArtifactId())) {
         utils.warn(sn.getName() + " is not in the list of supported files. Skipped");
         continue;
       }
@@ -664,8 +664,8 @@ public class Process extends AbstractMojo {
       utils.debug("Split name: " + sn);
 
       if ((sn == null) ||
-              ((sn.getSuffix() != null) && (!suffix.equals(
-                      sn.getSuffix())))) {
+              ((sn.getType() != null) && (!suffix.equals(
+                      sn.getType())))) {
         continue;
       }
 
@@ -698,7 +698,7 @@ public class Process extends AbstractMojo {
         continue;
       }
 
-      if ((suffix != null) && !suffix.equals(sn.getSuffix())) {
+      if ((suffix != null) && !suffix.equals(sn.getType())) {
         continue;
       }
 

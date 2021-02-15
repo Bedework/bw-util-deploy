@@ -20,7 +20,7 @@ public class Ear extends DeployableResource implements Updateable {
              final SplitName sn,
              final PropertiesChain props) throws Throwable {
     super(utils, path, sn, props, "org.bedework.app." +
-            sn.getPrefix() + ".");
+            sn.getArtifactId() + ".");
 
     final File earMeta = utils.subDirectory(theFile, "META-INF", true);
 
@@ -81,7 +81,7 @@ public class Ear extends DeployableResource implements Updateable {
 
   public War findWar(final String prefix) {
     for (final War war: wars.values()) {
-      if (prefix.equals(war.getSplitName().getPrefix())) {
+      if (prefix.equals(war.getSplitName().getArtifactId())) {
         return war;
       }
     }
