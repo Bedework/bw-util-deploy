@@ -92,7 +92,7 @@ public class DeployWfModule extends AbstractMojo {
     // Build a list of all dependencies
     // artifact.getFile()) needs requiresDependencyResolution
     for (final Artifact artifact: project.getArtifacts()) {
-      fileArtifacts.add(FileArtifact.fromMavenArtifact(artifact));
+      fileArtifacts.add(FileArtifact.from(artifact));
     }
 
     final var logger = getLog();
@@ -125,6 +125,11 @@ public class DeployWfModule extends AbstractMojo {
     try {
       if (moduleDependencies == null) {
         moduleDependencies = new ArrayList<>();
+      } else {
+        // Remove any project dependencies satisfied by modules.
+        for (final var md: moduleDependencies) {
+          removeModuleArtifacts(md, fileArtifacts);
+        }
       }
 
       // First deploy any jar dependencies
@@ -174,16 +179,58 @@ public class DeployWfModule extends AbstractMojo {
 
   private void removeArtifact(final List<FileArtifact> artifacts,
                               final FileInfo val) {
-    for (final var fa: artifacts) {
+    final var it = artifacts.listIterator();
+
+    while (it.hasNext()) {
+      final var fa = it.next();
       if (fa.sameAs(val)) {
         if (fa.laterThan(val)) {
           utils.warn("Project has later dependency for " + fa);
         }
       }
 
-      artifacts.remove(fa);
+      utils.debug("Remove dependency: " + fa);
+      it.remove();
+    }
+  }
+
+  private void removeModuleArtifacts(final String moduleName,
+                                     final List<FileArtifact> artifacts)
+          throws MojoFailureException {
+    List<SplitName> moduleFiles =
+            utils.getFiles(getPathToModuleMain(moduleName));
+
+    if (moduleFiles == null) {
+      moduleFiles =
+              utils.getFiles(getPathToSystemModuleMain(moduleName));
+    }
+
+    if (moduleFiles == null) {
       return;
     }
+
+    for (final var sn: moduleFiles) {
+      artifacts.remove(FileArtifact.from(sn));
+    }
+  }
+
+  private Path getPathToModuleMain(final String moduleName) {
+    return Paths.get(wildflyPath)
+                .resolve("modules")
+                .resolve(moduleName.replace('.', '/'))
+                .resolve("main")
+                .toAbsolutePath();
+  }
+
+  private Path getPathToSystemModuleMain(final String moduleName) {
+    return Paths.get(wildflyPath)
+                .resolve("modules")
+                .resolve("system")
+                .resolve("layers")
+                .resolve("base")
+                .resolve(moduleName.replace('.', '/'))
+                .resolve("main")
+                .toAbsolutePath();
   }
 
   private void deployModule(final JarDependency fileInfo,
@@ -191,12 +238,9 @@ public class DeployWfModule extends AbstractMojo {
                             final List<FileInfo> jarResources)
           throws MojoFailureException {
     try {
-      final Path pathToModuleMain =
-              Paths.get(wildflyPath)
-                   .resolve("modules")
-                   .resolve(fileInfo.getModuleName().replace('.', '/'))
-                   .resolve("main")
-                   .toAbsolutePath();
+      final Path pathToModuleMain = getPathToModuleMain(
+              fileInfo.getModuleName());
+
       utils.debug("Try to create " + pathToModuleMain);
       Files.createDirectories(pathToModuleMain);
 
@@ -292,8 +336,8 @@ public class DeployWfModule extends AbstractMojo {
       }
 
       // copy in the file.
-      utils.info(format("Deploy file %s to module %s",
-                        fn.getName(), moduleName));
+      utils.info(format("Deploy file %s to %s",
+                        fn.getName(), mainDir));
       final File theFile = utils.file(pathToFile.toFile(),
                                       fn.getName(), true);
       Files.copy(theFile.toPath(),

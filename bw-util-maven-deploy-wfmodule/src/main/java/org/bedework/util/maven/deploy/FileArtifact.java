@@ -3,6 +3,8 @@
 */
 package org.bedework.util.maven.deploy;
 
+import org.bedework.util.deployment.SplitName;
+
 import org.apache.maven.artifact.Artifact;
 
 import java.util.List;
@@ -26,7 +28,7 @@ public class FileArtifact extends JarDependency {
           repository, moduleDependencies);
   }
 
-  public static FileArtifact fromMavenArtifact(final Artifact val) {
+  public static FileArtifact from(final Artifact val) {
     final FileArtifact fa = new FileArtifact(null,
                                              val.getGroupId(),
                                              val.getArtifactId(),
@@ -37,6 +39,16 @@ public class FileArtifact extends JarDependency {
     fa.mavenArtifact = val;
 
     return fa;
+  }
+
+  public static FileArtifact from(final SplitName val) {
+    return new FileArtifact(null,
+                            null, // groupId
+                            val.getArtifactId(),
+                            val.getVersion(),
+                            val.getType(),
+                            null,
+                            null);
   }
 
   public Artifact getMavenArtifact() {
