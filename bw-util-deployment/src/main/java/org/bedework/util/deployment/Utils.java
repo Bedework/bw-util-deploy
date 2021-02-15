@@ -187,6 +187,23 @@ public class Utils {
     return f;
   }
 
+  public static int compareStrings(final String s1,
+                                   final String s2) {
+    if (s1 == null) {
+      if (s2 != null) {
+        return -1;
+      }
+
+      return 0;
+    }
+
+    if (s2 == null) {
+      return 1;
+    }
+
+    return s1.compareTo(s2);
+  }
+
   /** Parse a reader and return the DOM representation.
    *
    * @param rdr        Reader

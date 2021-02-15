@@ -19,6 +19,8 @@ import org.apache.maven.artifact.versioning.ComparableVersion;
 
 import java.util.List;
 
+import static org.bedework.util.deployment.Utils.compareStrings;
+
 /** Result of splitting a name into its component parts, e.g.
  *
  * anapp-3.10.5.war
@@ -219,23 +221,6 @@ public class SplitName implements Comparable<SplitName> {
     sb.append("}");
 
     return sb.toString();
-  }
-
-  private static int compareStrings(final String s1,
-                                    final String s2) {
-    if (s1 == null) {
-      if (s2 != null) {
-        return -1;
-      }
-
-      return 0;
-    }
-
-    if (s2 == null) {
-      return 1;
-    }
-
-    return s1.compareTo(s2);
   }
 }
 

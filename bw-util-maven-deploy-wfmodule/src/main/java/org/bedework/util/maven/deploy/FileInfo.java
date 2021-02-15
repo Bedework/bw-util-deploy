@@ -3,16 +3,19 @@
 */
 package org.bedework.util.maven.deploy;
 
+import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.bedework.util.deployment.Utils.compareStrings;
+
 /**
  * User: mike Date: 2/12/21 Time: 23:33
  */
-public class FileInfo {
+public class FileInfo implements Comparable<FileInfo> {
   @Parameter
   private String groupId;
 
@@ -69,12 +72,38 @@ public class FileInfo {
     repository = val;
   }
 
+  /** .
+   *
+   * @param that FileInfo to test
+   * @return true if artifactId and type match.
+   */
+  public boolean sameAs(final FileInfo that) {
+    return getArtifactId().equals(that.getArtifactId()) &&
+            getType().equals(that.getType());
+  }
+
+  /** artifactId and type must match.
+   *
+   * @param that FileInfo to test
+   * @return true if this version also is greater than that version.
+   */
+  public boolean laterThan(final FileInfo that) {
+    if (!sameAs(that)) {
+      return false;
+    }
+
+    return new ComparableVersion(getVersion())
+            .compareTo(new ComparableVersion(
+                    that.getVersion())) > 0;
+  }
+
   Path getRepoDir() throws MojoFailureException {
     if ((getRepository() == null) ||
             (getGroupId() == null) ||
             (getArtifactId() == null) ||
             (getVersion() == null)) {
-      throw new MojoFailureException("Insufficient information for " + this);
+      throw new MojoFailureException(
+              "Insufficient information for " + this);
     }
 
     return Paths.get(getRepository())
@@ -94,6 +123,32 @@ public class FileInfo {
     sb.append(getVersion());
     sb.append(", type=");
     sb.append(getType());
+  }
+
+  @Override
+  public int compareTo(final FileInfo that) {
+    int res = compareStrings(getArtifactId(),
+                             that.getArtifactId());
+    if (res != 0) {
+      return res;
+    }
+
+    res = compareStrings(getType(),
+                         that.getType());
+    if (res != 0) {
+      return res;
+    }
+
+    return compareStrings(getVersion(),
+                          that.getVersion());
+  }
+
+  public boolean equals(final Object o) {
+    if (!(o instanceof FileInfo)) {
+      return false;
+    }
+
+    return compareTo((FileInfo)o) == 0;
   }
 
   public String toString() {

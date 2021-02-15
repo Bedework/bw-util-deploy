@@ -30,8 +30,8 @@ import static java.lang.String.format;
  */
 @Mojo(name = "bw-deploy-wfmodule",
         defaultPhase = LifecyclePhase.INSTALL,
-        requiresDependencyCollection = ResolutionScope.COMPILE_PLUS_RUNTIME,
-        requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
+        requiresDependencyCollection = ResolutionScope.RUNTIME,
+        requiresDependencyResolution = ResolutionScope.RUNTIME)
 public class DeployWfModule extends AbstractMojo {
   @Parameter(defaultValue = "${project.build.directory}", readonly = true)
   private String target;
@@ -142,6 +142,7 @@ public class DeployWfModule extends AbstractMojo {
           deployModule(jd,
                        jd.getRepoDir(),
                        null);
+          removeArtifact(fileArtifacts, jd);
         }
       }
 
@@ -153,6 +154,14 @@ public class DeployWfModule extends AbstractMojo {
                                                 moduleDependencies),
                      Paths.get(target),
                      jarResources);
+        removeArtifact(fileArtifacts, artifact);
+      }
+
+      if (!fileArtifacts.isEmpty()) {
+        utils.warn("Unsatisfied dependencies:");
+        for (final var fa: fileArtifacts) {
+          utils.warn(fa.toString());
+        }
       }
     } catch (final MojoFailureException mfe) {
       mfe.printStackTrace();
@@ -160,6 +169,20 @@ public class DeployWfModule extends AbstractMojo {
     } catch (final Throwable t) {
       t.printStackTrace();
       throw new MojoFailureException(t.getMessage());
+    }
+  }
+
+  private void removeArtifact(final List<FileArtifact> artifacts,
+                              final FileInfo val) {
+    for (final var fa: artifacts) {
+      if (fa.sameAs(val)) {
+        if (fa.laterThan(val)) {
+          utils.warn("Project has later dependency for " + fa);
+        }
+      }
+
+      artifacts.remove(fa);
+      return;
     }
   }
 
