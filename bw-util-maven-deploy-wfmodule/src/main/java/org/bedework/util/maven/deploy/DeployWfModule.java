@@ -134,33 +134,7 @@ public class DeployWfModule extends AbstractMojo {
       } else {
         // Remove any project dependencies satisfied by modules.
         for (final var md: moduleDependencies) {
-          removeModuleArtifacts(md.name, fileArtifacts);
-        }
-      }
-
-      if (includeJavax) {
-        moduleDependencies.add(
-                new ModuleDependency("javax.api", true));
-      }
-
-      // First deploy any jar dependencies
-
-      if (isEmpty(jarDependencies)) {
-        utils.debug("No jar dependencies");
-      } else {
-        for (final var jd: jarDependencies) {
-          utils.debug("Deploy jar dependency " + jd);
-          moduleDependencies.add(
-                  new ModuleDependency(jd.getModuleName(),
-                                       jd.isExport()));
-
-          // Find the repo
-
-          jd.setRepository(localRepository);
-          deployModule(jd,
-                       jd.getRepoDir(),
-                       null);
-          removeArtifact(fileArtifacts, jd);
+          removeModuleArtifacts(md.getName(), fileArtifacts);
         }
       }
 
@@ -169,15 +143,19 @@ public class DeployWfModule extends AbstractMojo {
         deployModule(JarDependency.fromFileInfo(moduleName,
                                                 artifact,
                                                 target,
+                                                jarDependencies,
                                                 moduleDependencies),
                      Paths.get(target),
-                     jarResources);
+                     jarResources,
+                     fileArtifacts);
         removeArtifact(fileArtifacts, artifact);
       } else {
         deployModule(JarDependency.forNoArtifact(moduleName,
+                                                jarDependencies,
                                                 moduleDependencies),
                      null,
-                     jarResources);
+                     jarResources,
+                     fileArtifacts);
       }
 
       if (!fileArtifacts.isEmpty()) {
@@ -253,7 +231,8 @@ public class DeployWfModule extends AbstractMojo {
 
   private void deployModule(final JarDependency fileInfo,
                             final Path pathToFile,
-                            final List<FileInfo> jarResources)
+                            final List<FileInfo> jarResources,
+                            final List<FileArtifact> artifacts)
           throws MojoFailureException {
     try {
       final Path pathToModuleMain = getPathToModuleMain(
@@ -283,6 +262,37 @@ public class DeployWfModule extends AbstractMojo {
         moduleXml.addResource(fn.getName());
       }
 
+      // First deploy any jar dependencies
+
+      final List<ModuleDependency> moduleDependencies;
+
+      if (fileInfo.getModuleDependencies() != null) {
+        moduleDependencies = new ArrayList<>(
+                fileInfo.getModuleDependencies());
+      } else {
+        moduleDependencies = new ArrayList<>();
+      }
+
+      if (isEmpty(fileInfo.getJarDependencies())) {
+        utils.debug("No jar dependencies");
+      } else {
+        for (final var jd: fileInfo.getJarDependencies()) {
+          utils.debug("Deploy jar dependency " + jd);
+          moduleDependencies.add(
+                  new ModuleDependency(jd.getModuleName(),
+                                       jd.isExport()));
+
+          // Find the repo
+
+          jd.setRepository(localRepository);
+          deployModule(jd,
+                       jd.getRepoDir(),
+                       null,
+                       artifacts);
+          removeArtifact(artifacts, jd);
+        }
+      }
+
       if (jarResources != null) {
         for (final var jr: jarResources) {
           jr.setRepository(localRepository);
@@ -294,10 +304,16 @@ public class DeployWfModule extends AbstractMojo {
         }
       }
 
-      if (fileInfo.getModuleDependencies() != null) {
-        for (final var m: fileInfo.getModuleDependencies()) {
-          moduleXml.addDependency(m);
+      if (includeJavax) {
+        final var md = new ModuleDependency("javax.api", true);
+
+        if (!moduleDependencies.contains(md)) {
+          moduleDependencies.add(md);
         }
+      }
+
+      for (final var m: moduleDependencies) {
+        moduleXml.addDependency(m);
       }
 
       moduleXml.output();

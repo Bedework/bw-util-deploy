@@ -73,9 +73,9 @@ public class ModuleXml extends XmlFile {
     }
 
     final Element mNode = doc.createElement("module");
-    mNode.setAttribute("name", val.name);
+    mNode.setAttribute("name", val.getName());
 
-    if (val.export) {
+    if (val.isExport()) {
       mNode.setAttribute("export", "true");
     }
 

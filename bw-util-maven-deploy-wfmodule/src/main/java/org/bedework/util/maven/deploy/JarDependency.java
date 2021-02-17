@@ -18,6 +18,9 @@ public class JarDependency extends FileInfo {
   private String moduleName;
 
   @Parameter
+  private List<JarDependency> jarDependencies;
+
+  @Parameter
   private List<ModuleDependency> moduleDependencies;
 
   // For maven
@@ -29,15 +32,18 @@ public class JarDependency extends FileInfo {
                 final String version,
                 final String type,
                 final String repository,
+                final List<JarDependency> jarDependencies,
                 final List<ModuleDependency> moduleDependencies) {
     super(groupId, artifactId, version, type, repository);
     this.moduleName = moduleName;
+    this.jarDependencies = jarDependencies;
     this.moduleDependencies = moduleDependencies;
   }
 
   static JarDependency fromFileInfo(final String moduleName,
                                     final FileInfo fileInfo,
                                     final String repository,
+                                    final List<JarDependency> jarDependencies,
                                     final List<ModuleDependency> moduleDependencies) {
     return new JarDependency(moduleName,
                              fileInfo.getGroupId(),
@@ -45,17 +51,20 @@ public class JarDependency extends FileInfo {
                              fileInfo.getVersion(),
                              fileInfo.getType(),
                              repository,
+                             jarDependencies,
                              moduleDependencies);
   }
 
   static JarDependency forNoArtifact(final String moduleName,
-                                    final List<ModuleDependency> moduleDependencies) {
+                                     final List<JarDependency> jarDependencies,
+                                     final List<ModuleDependency> moduleDependencies) {
     return new JarDependency(moduleName,
                              null,
                              null,
                              null,
                              null,
                              null,
+                             jarDependencies,
                              moduleDependencies);
   }
 
@@ -64,6 +73,14 @@ public class JarDependency extends FileInfo {
    */
   String getModuleName() {
     return moduleName;
+  }
+
+  public boolean isExport() {
+    return export;
+  }
+
+  public List<JarDependency> getJarDependencies() {
+    return jarDependencies;
   }
 
   List<ModuleDependency> getModuleDependencies() {
@@ -82,9 +99,5 @@ public class JarDependency extends FileInfo {
     sb.append("}");
 
     return sb.toString();
-  }
-
-  public boolean isExport() {
-    return export;
   }
 }
