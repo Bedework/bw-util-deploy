@@ -23,7 +23,7 @@ public class FileArtifact extends JarDependency {
                       final String version,
                       final String type,
                       final String repository,
-                      final List<String> moduleDependencies) {
+                      final List<ModuleDependency> moduleDependencies) {
     super(moduleName, groupId, artifactId, version, type,
           repository, moduleDependencies);
   }

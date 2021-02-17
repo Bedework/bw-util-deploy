@@ -11,6 +11,15 @@ import java.util.List;
  * User: mike Date: 2/12/21 Time: 23:34
  */
 public class JarDependency extends FileInfo {
+  @Parameter(defaultValue = "false")
+  boolean export;
+
+  @Parameter
+  private String moduleName;
+
+  @Parameter
+  private List<ModuleDependency> moduleDependencies;
+
   // For maven
   public JarDependency() {}
 
@@ -20,7 +29,7 @@ public class JarDependency extends FileInfo {
                 final String version,
                 final String type,
                 final String repository,
-                final List<String> moduleDependencies) {
+                final List<ModuleDependency> moduleDependencies) {
     super(groupId, artifactId, version, type, repository);
     this.moduleName = moduleName;
     this.moduleDependencies = moduleDependencies;
@@ -29,7 +38,7 @@ public class JarDependency extends FileInfo {
   static JarDependency fromFileInfo(final String moduleName,
                                     final FileInfo fileInfo,
                                     final String repository,
-                                    final List<String> moduleDependencies) {
+                                    final List<ModuleDependency> moduleDependencies) {
     return new JarDependency(moduleName,
                              fileInfo.getGroupId(),
                              fileInfo.getArtifactId(),
@@ -39,11 +48,16 @@ public class JarDependency extends FileInfo {
                              moduleDependencies);
   }
 
-  @Parameter
-  private String moduleName;
-
-  @Parameter
-  private List<String> moduleDependencies;
+  static JarDependency forNoArtifact(final String moduleName,
+                                    final List<ModuleDependency> moduleDependencies) {
+    return new JarDependency(moduleName,
+                             null,
+                             null,
+                             null,
+                             null,
+                             null,
+                             moduleDependencies);
+  }
 
   /**
    * Name of the module - e.g com.fasterxml.jackson.core.annotations
@@ -52,7 +66,7 @@ public class JarDependency extends FileInfo {
     return moduleName;
   }
 
-  List<String> getModuleDependencies() {
+  List<ModuleDependency> getModuleDependencies() {
     return moduleDependencies;
   }
 
@@ -68,5 +82,9 @@ public class JarDependency extends FileInfo {
     sb.append("}");
 
     return sb.toString();
+  }
+
+  public boolean isExport() {
+    return export;
   }
 }

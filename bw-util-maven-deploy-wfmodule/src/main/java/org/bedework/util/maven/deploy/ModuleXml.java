@@ -65,7 +65,7 @@ public class ModuleXml extends XmlFile {
     el.appendChild(resNode);
   }
 
-  void addDependency(final String name) throws Throwable {
+  void addDependency(final ModuleDependency val) throws Throwable {
     Element el = findElement(root, "dependencies");
     if (el == null) {
       el = doc.createElement("dependencies");
@@ -73,7 +73,11 @@ public class ModuleXml extends XmlFile {
     }
 
     final Element mNode = doc.createElement("module");
-    mNode.setAttribute("name", name);
+    mNode.setAttribute("name", val.name);
+
+    if (val.export) {
+      mNode.setAttribute("export", "true");
+    }
 
     el.appendChild(mNode);
   }

@@ -62,7 +62,7 @@ public class DeployWfModule extends AbstractMojo {
   private List<JarDependency> jarDependencies;
 
   @Parameter
-  private List<String> moduleDependencies;
+  private List<ModuleDependency> moduleDependencies;
 
   @Parameter(required = true)
   private String moduleName;
@@ -75,6 +75,12 @@ public class DeployWfModule extends AbstractMojo {
    */
   @Parameter(defaultValue = "false")
   private boolean noArtifact;
+
+  /**
+   * If true will add "javax.api" to module inclusion
+   */
+  @Parameter(defaultValue = "true")
+  private boolean includeJavax;
 
   private Utils utils;
 
@@ -128,8 +134,13 @@ public class DeployWfModule extends AbstractMojo {
       } else {
         // Remove any project dependencies satisfied by modules.
         for (final var md: moduleDependencies) {
-          removeModuleArtifacts(md, fileArtifacts);
+          removeModuleArtifacts(md.name, fileArtifacts);
         }
+      }
+
+      if (includeJavax) {
+        moduleDependencies.add(
+                new ModuleDependency("javax.api", true));
       }
 
       // First deploy any jar dependencies
@@ -139,7 +150,9 @@ public class DeployWfModule extends AbstractMojo {
       } else {
         for (final var jd: jarDependencies) {
           utils.debug("Deploy jar dependency " + jd);
-          moduleDependencies.add(jd.getModuleName());
+          moduleDependencies.add(
+                  new ModuleDependency(jd.getModuleName(),
+                                       jd.isExport()));
 
           // Find the repo
 
@@ -160,6 +173,11 @@ public class DeployWfModule extends AbstractMojo {
                      Paths.get(target),
                      jarResources);
         removeArtifact(fileArtifacts, artifact);
+      } else {
+        deployModule(JarDependency.forNoArtifact(moduleName,
+                                                moduleDependencies),
+                     null,
+                     jarResources);
       }
 
       if (!fileArtifacts.isEmpty()) {
@@ -246,10 +264,6 @@ public class DeployWfModule extends AbstractMojo {
 
       final List<SplitName> resourceFiles =
               utils.getFiles(pathToModuleMain);
-      final SplitName fn = deployFile(resourceFiles,
-                                      pathToModuleMain,
-                                      pathToFile,
-                                      fileInfo);
 
       // Copy in the module.xml template
       final Path xmlPath = pathToModuleMain.resolve("module.xml");
@@ -260,7 +274,14 @@ public class DeployWfModule extends AbstractMojo {
               new ModuleXml(utils,
                             xmlPath,
                             fileInfo.getModuleName());
-      moduleXml.addResource(fn.getName());
+
+      if (pathToFile != null) {
+        final SplitName fn = deployFile(resourceFiles,
+                                        pathToModuleMain,
+                                        pathToFile,
+                                        fileInfo);
+        moduleXml.addResource(fn.getName());
+      }
 
       if (jarResources != null) {
         for (final var jr: jarResources) {
@@ -391,6 +412,11 @@ public class DeployWfModule extends AbstractMojo {
 
       if ((fileInfo.getType() != null) &&
               !fileInfo.getType().equals(sn.getType())) {
+        continue;
+      }
+
+      if ((fileInfo.getType() == null) &&
+              !"jar".equals(sn.getType())) {
         continue;
       }
 
