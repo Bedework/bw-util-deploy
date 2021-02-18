@@ -7,21 +7,26 @@ import org.bedework.util.deployment.SplitName;
 import org.bedework.util.deployment.Utils;
 
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.model.Model;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.ListIterator;
 
 import static java.lang.String.format;
 
@@ -93,15 +98,7 @@ public class DeployWfModule extends AbstractMojo {
       return;
     }
 
-    final List<FileArtifact> fileArtifacts = new ArrayList<>();
-
-    // Build a list of all dependencies
-    // artifact.getFile()) needs requiresDependencyResolution
-    for (final Artifact artifact: project.getArtifacts()) {
-      fileArtifacts.add(FileArtifact.from(artifact));
-    }
-
-    final var logger = getLog();
+    final Log logger = getLog();
     utils = new Utils(logger);
 
     debug = logger.isDebugEnabled();
@@ -109,10 +106,20 @@ public class DeployWfModule extends AbstractMojo {
       utils.setDebug(true);
     }
 
-    final var model = project.getModel();
+    final List<FileArtifact> fileArtifacts = new ArrayList<>();
+
+    // Build a list of all dependencies
+    // artifact.getFile()) needs requiresDependencyResolution
+    for (final Artifact artifact: project.getArtifacts()) {
+      final FileArtifact fa = FileArtifact.from(artifact);
+      utils.debug(format("WfModules: Adding dependency %s", fa));
+      fileArtifacts.add(fa);
+    }
+
+    final Model model = project.getModel();
 
     if (noArtifact) {
-      utils.info(format("Deploy module %s with no artifact",
+      utils.info(format("WfModules: Deploy module %s with no artifact",
                         moduleName));
     } else {
       if (artifact == null) {
@@ -123,7 +130,7 @@ public class DeployWfModule extends AbstractMojo {
                                 null);
       }
 
-      utils.info(format("Deploy module %s with artifact %s",
+      utils.info(format("WfModules: Deploy module %s with artifact %s",
                         moduleName,
                         project.getModel().getArtifactId()));
     }
@@ -133,7 +140,7 @@ public class DeployWfModule extends AbstractMojo {
         moduleDependencies = new ArrayList<>();
       } else {
         // Remove any project dependencies satisfied by modules.
-        for (final var md: moduleDependencies) {
+        for (final ModuleDependency md: moduleDependencies) {
           removeModuleArtifacts(md.getName(), fileArtifacts);
         }
       }
@@ -159,9 +166,9 @@ public class DeployWfModule extends AbstractMojo {
       }
 
       if (!fileArtifacts.isEmpty()) {
-        utils.warn("Unsatisfied dependencies:");
-        for (final var fa: fileArtifacts) {
-          utils.warn(fa.toString());
+        utils.warn("WfModules: Unsatisfied dependencies:");
+        for (final FileArtifact fa: fileArtifacts) {
+          utils.warn(format("WfModules: %s", fa.toString()));
         }
       }
     } catch (final MojoFailureException mfe) {
@@ -175,18 +182,18 @@ public class DeployWfModule extends AbstractMojo {
 
   private void removeArtifact(final List<FileArtifact> artifacts,
                               final FileInfo val) {
-    final var it = artifacts.listIterator();
+    final ListIterator<FileArtifact> it = artifacts.listIterator();
 
     while (it.hasNext()) {
-      final var fa = it.next();
+      final FileArtifact fa = it.next();
       if (fa.sameAs(val)) {
         if (fa.laterThan(val)) {
           utils.warn("Project has later dependency for " + fa);
         }
-      }
 
-      utils.debug("Remove dependency: " + fa);
-      it.remove();
+        utils.debug("WfModules: Remove dependency: " + fa);
+        it.remove();
+      }
     }
   }
 
@@ -205,8 +212,10 @@ public class DeployWfModule extends AbstractMojo {
       return;
     }
 
-    for (final var sn: moduleFiles) {
-      artifacts.remove(FileArtifact.from(sn));
+    for (final SplitName sn: moduleFiles) {
+      final FileArtifact fa = FileArtifact.from(sn);
+      utils.debug("WfModule: Remove dependency " + fa);
+      artifacts.remove(fa);
     }
   }
 
@@ -247,9 +256,12 @@ public class DeployWfModule extends AbstractMojo {
       // Copy in the module.xml template
       final Path xmlPath = pathToModuleMain.resolve("module.xml");
 
-      Files.writeString(xmlPath, ModuleXml.moduleXmlStr);
+      try (final FileWriter fw = new FileWriter(xmlPath.toFile());
+           final BufferedWriter bw = new BufferedWriter(fw)) {
+        bw.write(ModuleXml.moduleXmlStr);
+      }
 
-      final var moduleXml =
+      final ModuleXml moduleXml =
               new ModuleXml(utils,
                             xmlPath,
                             fileInfo.getModuleName());
@@ -276,7 +288,7 @@ public class DeployWfModule extends AbstractMojo {
       if (isEmpty(fileInfo.getJarDependencies())) {
         utils.debug("No jar dependencies");
       } else {
-        for (final var jd: fileInfo.getJarDependencies()) {
+        for (final JarDependency jd: fileInfo.getJarDependencies()) {
           utils.debug("Deploy jar dependency " + jd);
           moduleDependencies.add(
                   new ModuleDependency(jd.getModuleName(),
@@ -294,7 +306,7 @@ public class DeployWfModule extends AbstractMojo {
       }
 
       if (jarResources != null) {
-        for (final var jr: jarResources) {
+        for (final FileInfo jr: jarResources) {
           jr.setRepository(localRepository);
           final SplitName jrFn = deployFile(resourceFiles,
                                             pathToModuleMain,
@@ -305,14 +317,14 @@ public class DeployWfModule extends AbstractMojo {
       }
 
       if (includeJavax) {
-        final var md = new ModuleDependency("javax.api", true);
+        final ModuleDependency md = new ModuleDependency("javax.api", true);
 
         if (!moduleDependencies.contains(md)) {
           moduleDependencies.add(md);
         }
       }
 
-      for (final var m: moduleDependencies) {
+      for (final ModuleDependency m: moduleDependencies) {
         moduleXml.addDependency(m);
       }
 

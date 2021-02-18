@@ -403,7 +403,7 @@ public class Utils {
 
   public List<SplitName> getFiles(final Path pathToFile)
           throws MojoFailureException {
-    final var dir = pathToFile.toFile();
+    final File dir = pathToFile.toFile();
     debug("Get names from dir " + dir);
     final String[] names;
     try {

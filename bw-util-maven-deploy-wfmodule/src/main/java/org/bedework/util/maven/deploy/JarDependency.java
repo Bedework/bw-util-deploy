@@ -11,8 +11,8 @@ import java.util.List;
  * User: mike Date: 2/12/21 Time: 23:34
  */
 public class JarDependency extends FileInfo {
-  @Parameter(defaultValue = "false")
-  boolean export;
+  @Parameter(defaultValue = "true")
+  boolean export= true;
 
   @Parameter
   private String moduleName;
