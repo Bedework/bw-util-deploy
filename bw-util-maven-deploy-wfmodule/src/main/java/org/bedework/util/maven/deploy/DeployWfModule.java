@@ -374,7 +374,7 @@ public class DeployWfModule extends AbstractMojo {
                             fn.getName(),
                             mfn.getVersion(),
                             fn.getVersion()));
-          return fn;
+          return mfn;
         }
 
         // Delete the current deployed version
