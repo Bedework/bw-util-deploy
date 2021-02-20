@@ -78,12 +78,16 @@ public class SplitName implements Comparable<SplitName> {
   public static SplitName testName(final String name) {
     /* Try to figure out the artifactId */
     final int dashPos;
-    final int snapShotPos = name.indexOf("-SNAPSHOT");
+    int testPos = name.indexOf("-SNAPSHOT");
 
-    if (snapShotPos < 0) {
+    if (testPos < 0) {
+      testPos = name.indexOf("-GA");
+    }
+
+    if (testPos < 0) {
       dashPos = name.lastIndexOf("-");
     } else {
-      dashPos = name.lastIndexOf("-", snapShotPos - 1);
+      dashPos = name.lastIndexOf("-", testPos - 1);
     }
 
     if (dashPos < 0) {
