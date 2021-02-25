@@ -180,6 +180,26 @@ public class DeployWfModule extends AbstractMojo {
     }
   }
 
+  private FileArtifact findArtifact(final List<FileArtifact> artifacts,
+                                    final FileInfo val) {
+    FileArtifact theArtifact = null;
+
+    for (final FileArtifact fa: artifacts) {
+      if (fa.sameAs(val)) {
+        if (fa.laterThan(val)) {
+          utils.warn("Project has later dependency for " + fa);
+        }
+
+        if (theArtifact != null) {
+          utils.warn("Project has multiple dependencies on " + fa);
+        }
+        theArtifact = fa;
+      }
+    }
+
+    return theArtifact;
+  }
+
   private void removeArtifact(final List<FileArtifact> artifacts,
                               final FileInfo val) {
     final ListIterator<FileArtifact> it = artifacts.listIterator();
@@ -265,6 +285,14 @@ public class DeployWfModule extends AbstractMojo {
               new ModuleXml(utils,
                             xmlPath,
                             fileInfo.getModuleName());
+
+      final FileArtifact theArtifact = findArtifact(artifacts, fileInfo);
+
+      if (theArtifact != null) {
+        utils.debug(format("Found artifact %s with file %s",
+                           theArtifact,
+                           theArtifact.getMavenArtifact().getFile()));
+      }
 
       if (pathToFile != null) {
         final SplitName fn = deployFile(resourceFiles,

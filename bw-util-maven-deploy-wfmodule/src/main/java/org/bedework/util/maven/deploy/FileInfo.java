@@ -78,7 +78,8 @@ public class FileInfo implements Comparable<FileInfo> {
    * @return true if artifactId and type match.
    */
   public boolean sameAs(final FileInfo that) {
-    return getArtifactId().equals(that.getArtifactId()) &&
+    return getGroupId().equals(that.getGroupId()) &&
+            getArtifactId().equals(that.getArtifactId()) &&
             getType().equals(that.getType());
   }
 
