@@ -40,6 +40,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Formatter;
 import java.util.List;
@@ -401,6 +402,8 @@ public class Utils {
 
   }
 
+  final List<String> skipNames = Arrays.asList("module.xml");
+
   public List<SplitName> getFiles(final Path pathToFile)
           throws MojoFailureException {
     final File dir = pathToFile.toFile();
@@ -421,6 +424,11 @@ public class Utils {
     final List<SplitName> files = new ArrayList<>();
 
     for (final String nm: names) {
+      if (skipNames.contains(nm)) {
+        debug("Skipped " + nm);
+        continue;
+      }
+
       debug("Found " + nm);
       final SplitName sn = SplitName.testName(nm);
 
