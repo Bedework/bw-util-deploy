@@ -17,6 +17,7 @@ package org.bedework.util.deployment;
 
 import org.apache.maven.artifact.versioning.ComparableVersion;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.bedework.util.deployment.Utils.compareStrings;
@@ -69,6 +70,11 @@ public class SplitName implements Comparable<SplitName> {
     this.type = type;
   }
 
+  public static List<String> classifiers =
+          Arrays.asList("-SNAPSHOT",
+                        "-GA",
+                        "-min");
+
   /** Tries to figure out what the artifactId is for the name and then
    * splits it. Assumes we have a "-" in the name.
    *
@@ -78,34 +84,28 @@ public class SplitName implements Comparable<SplitName> {
   public static SplitName testName(final String name) {
     /* Try to figure out the artifactId */
 
-/*    int testPos = name.indexOf("-SNAPSHOT");
+    int testPos = -1;
 
-    if (testPos < 0) {
-      testPos = name.indexOf("-GA");
-    }
- */
-    // See if we have a classifier
-    final int testPos =  name.lastIndexOf("-");
+    for (final String possibleClassifier: classifiers) {
+      testPos = name.indexOf(possibleClassifier);
 
-    if (testPos < 0) {
-      // No dash at all - not a versioned name
-      return null;
+      if (testPos > 0) {
+        break;
+      }
     }
 
-    int dashPos = name.lastIndexOf("-", testPos - 1);
-    if (dashPos < 0) {
-      // No classifier
-      dashPos = testPos;
-    }
-/*
-
-    int dashPos;
+    final int dashPos;
     if (testPos < 0) {
       dashPos = name.lastIndexOf("-");
     } else {
       dashPos = name.lastIndexOf("-", testPos - 1);
     }
- */
+
+    if (dashPos < 0) {
+      // Not versioned
+      return null;
+    }
+
     final int dotPos = name.lastIndexOf(".");
 
     if (dotPos > dashPos) {
