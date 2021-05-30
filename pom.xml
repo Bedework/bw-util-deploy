@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.bedework</groupId>
   <artifactId>bw-util-deploy</artifactId>
-  <version>4.0.29-SNAPSHOT</version>
+  <version>4.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>bw-util-deploy</name>
   <description>This project provides a number of utility classes and methods for deployment</description>
@@ -31,7 +31,7 @@
     <maven-plugin-api.version>3.6.3</maven-plugin-api.version>
 
     <!-- For runnable version -->
-    <log4j.version>1.2.15</log4j.version>
+    <log4j.version>2.14.1</log4j.version>
   </properties>
 
   <organization>
