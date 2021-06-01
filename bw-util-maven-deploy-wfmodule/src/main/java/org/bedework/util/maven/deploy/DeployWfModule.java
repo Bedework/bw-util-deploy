@@ -221,11 +221,13 @@ public class DeployWfModule extends AbstractMojo {
                                      final List<FileArtifact> artifacts)
           throws MojoFailureException {
     List<SplitName> moduleFiles =
-            utils.getFiles(getPathToModuleMain(moduleName));
+            utils.getFiles(getPathToModuleMain(moduleName),
+                           null);
 
     if (moduleFiles == null) {
       moduleFiles =
-              utils.getFiles(getPathToSystemModuleMain(moduleName));
+              utils.getFiles(getPathToSystemModuleMain(moduleName),
+                             null);
     }
 
     if (moduleFiles == null) {
@@ -271,7 +273,7 @@ public class DeployWfModule extends AbstractMojo {
       Files.createDirectories(pathToModuleMain);
 
       final List<SplitName> resourceFiles =
-              utils.getFiles(pathToModuleMain);
+              utils.getFiles(pathToModuleMain, null);
 
       // Copy in the module.xml template
       final Path xmlPath = pathToModuleMain.resolve("module.xml");
@@ -439,7 +441,9 @@ public class DeployWfModule extends AbstractMojo {
   private SplitName matchFile(final Path pathToFile,
                               final FileInfo fileInfo)
           throws MojoFailureException {
-    return matchFile(utils.getFiles(pathToFile), fileInfo);
+    return matchFile(utils.getFiles(pathToFile,
+                                    fileInfo.getArtifactId()),
+                     fileInfo);
   }
 
   /** Look for a file with the same prefix and type as the param
@@ -478,7 +482,7 @@ public class DeployWfModule extends AbstractMojo {
 
       if (file != null) {
         throw new MojoFailureException(
-                "Exactly one deployable module resource of given name is required");
+                "Exactly one deployable module resource of given name is required. Already found: " + file);
       }
 
       file = sn;
