@@ -402,9 +402,12 @@ public class Utils {
 
   }
 
-  final List<String> skipNames = Arrays.asList("module.xml");
+  final List<String> skipNames = Arrays.asList("module.xml",
+                                               "maven-metadata-local.xml",
+                                               "_remote.repositories");
 
-  public List<SplitName> getFiles(final Path pathToFile)
+  public List<SplitName> getFiles(final Path pathToFile,
+                                  final String artifactId)
           throws MojoFailureException {
     final File dir = pathToFile.toFile();
     debug("Get names from dir " + dir);
@@ -430,7 +433,12 @@ public class Utils {
       }
 
       debug("Found " + nm);
-      final SplitName sn = SplitName.testName(nm);
+      final SplitName sn;
+      if (artifactId == null) {
+        sn = SplitName.testName(nm);
+      } else {
+        sn = new SplitName(nm, artifactId);
+      }
 
       if (sn == null) {
         debug("Unable to process " + nm);
@@ -441,6 +449,10 @@ public class Utils {
       if (nm.endsWith("-sources.jar") ||
               nm.endsWith(".sha1") ||
               nm.endsWith(".pom")) {
+        continue;
+      }
+
+      if (sn.getVersion().endsWith("-javadoc")) {
         continue;
       }
 

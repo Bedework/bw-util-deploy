@@ -71,9 +71,12 @@ public class SplitName implements Comparable<SplitName> {
   }
 
   public static List<String> classifiers =
-          Arrays.asList("-SNAPSHOT",
-                        "-GA",
-                        "-min");
+          Arrays.asList("-SNAPSHOT.",
+                        "-GA.",
+                        "-javadoc.",
+                        ".0-1.",
+                        ".0-1.",
+                        "-min.");
 
   /** Tries to figure out what the artifactId is for the name and then
    * splits it. Assumes we have a "-" in the name.
