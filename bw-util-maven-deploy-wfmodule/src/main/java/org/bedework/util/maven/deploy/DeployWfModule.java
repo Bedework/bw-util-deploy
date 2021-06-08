@@ -480,6 +480,10 @@ public class DeployWfModule extends AbstractMojo {
         continue;
       }
 
+      if (sn.getVersion().endsWith("-tests")) {
+        continue;
+      }
+
       if (file != null) {
         throw new MojoFailureException(
                 "Exactly one deployable module resource of given name is required. Already found: " + file);

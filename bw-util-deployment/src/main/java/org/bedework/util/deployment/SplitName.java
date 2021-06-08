@@ -74,6 +74,8 @@ public class SplitName implements Comparable<SplitName> {
           Arrays.asList("-SNAPSHOT.",
                         "-GA.",
                         "-javadoc.",
+                        "-jre.",
+                        "-tests.",
                         ".0-1.",
                         ".0-1.",
                         "-min.");
