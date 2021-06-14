@@ -188,6 +188,16 @@ public class Utils {
     return f;
   }
 
+  public File file(final Path path) {
+    final File f = path.toFile();
+
+    if (!f.exists() || !f.isFile()) {
+      throw new RuntimeException(path + " must exist and be a file");
+    }
+
+    return f;
+  }
+
   public static int compareStrings(final String s1,
                                    final String s2) {
     if (s1 == null) {

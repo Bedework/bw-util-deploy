@@ -171,6 +171,48 @@ public class DeployWfModule extends AbstractMojo {
           utils.warn(format("WfModules: %s", fa.toString()));
         }
       }
+
+      /*
+      utils.info("project output: " + project.getBuild().getDirectory());
+      utils.info("project name: " + project.getName());
+      utils.info("project parent: " + project.getParent().getName());
+      utils.info("module name: " + moduleName);
+      utils.info("depends on: ");
+      for (final ModuleDependency md: moduleDependencies) {
+        utils.info("   -->" + md.getName());
+      }
+      */
+
+      // Copy in the module.xml template
+      final Path xmlPath = Paths.get(
+              project.getBuild().getDirectory()).resolve("moduleInfo.xml");
+
+      try (final FileWriter fw = new FileWriter(xmlPath.toFile());
+           final BufferedWriter bw = new BufferedWriter(fw)) {
+        bw.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        bw.write("<module>\n");
+        bw.write("  <project-name>" + project.getName() + "</project-name>\n");
+        final MavenProject parent = project.getParent();
+        if (parent != null) {
+          bw.write("  <project-parent>" + parent.getName() + "</project-parent>\n");
+        }
+
+        bw.write("  <module-name>" + moduleName + "</module-name>\n");
+
+        if (!moduleDependencies.isEmpty()) {
+          bw.write("  <dependencies>\n");
+
+          for (final ModuleDependency md: moduleDependencies) {
+            bw.write("    <module>" + md.getName() + "</module>\n");
+            utils.info("   -->" + md.getName());
+          }
+          bw.write("  </dependencies>\n");
+        }
+
+        bw.write("</module>\n");
+      }
+
+
     } catch (final MojoFailureException mfe) {
       mfe.printStackTrace();
       throw mfe;

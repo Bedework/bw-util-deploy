@@ -8,15 +8,19 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.OutputStream;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Represent an xml file in a directory.
  *
  * @author douglm
  */
 public class XmlFile extends BaseClass {
-  protected final Document doc;
   protected final File theXml;
-  protected final Element root;
+
+  protected Document doc;
+  protected Element root;
 
   protected boolean updated;
 
@@ -27,11 +31,7 @@ public class XmlFile extends BaseClass {
     super(utils);
     theXml = utils.file(dir, name, true);
 
-    doc = utils.parseXml(new FileReader(theXml),
-                         nameSpaced,
-                         true);  // pretend offline
-
-    root = doc.getDocumentElement();
+    init(nameSpaced);
   }
 
   public XmlFile(final Utils utils,
@@ -40,6 +40,19 @@ public class XmlFile extends BaseClass {
     super(utils);
     theXml = utils.file(path);
 
+    init(nameSpaced);
+  }
+
+  public XmlFile(final Utils utils,
+                 final Path path,
+                 final boolean nameSpaced) throws Throwable {
+    super(utils);
+    theXml = utils.file(path);
+
+    init(nameSpaced);
+  }
+
+  private void init(final boolean nameSpaced) throws Throwable {
     doc = utils.parseXml(new FileReader(theXml),
                          nameSpaced,
                          true);  // pretend offline
@@ -66,6 +79,29 @@ public class XmlFile extends BaseClass {
     }
 
     return null;
+  }
+
+  protected List<Element> findElements(final Element root,
+                                       final String tagName) {
+    final List<Element> els = new ArrayList<>();
+
+    for (final Element el: NetUtil.getElementsArray(root)) {
+      if (tagName.equals(el.getTagName())) {
+        els.add(el);
+      }
+    }
+
+    return els;
+  }
+
+  protected String findElementContent(final Element root,
+                                      final String tagName) {
+    final Element el = findElement(root, tagName);
+    if (el == null) {
+      return null;
+    }
+
+    return NetUtil.getElementContent(el);
   }
 
   /** Update the value if it has a property replacement pattern.
