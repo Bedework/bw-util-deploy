@@ -183,7 +183,6 @@ public class DeployWfModule extends AbstractMojo {
       }
       */
 
-      // Copy in the module.xml template
       final Path xmlPath = Paths.get(
               project.getBuild().getDirectory()).resolve("moduleInfo.xml");
 
@@ -284,7 +283,7 @@ public class DeployWfModule extends AbstractMojo {
   }
 
   private Path getPathToModuleMain(final String moduleName) {
-    return Paths.get(wildflyPath)
+    return Paths.get(project.getBuild().getDirectory())
                 .resolve("modules")
                 .resolve(moduleName.replace('.', '/'))
                 .resolve("main")
@@ -401,6 +400,13 @@ public class DeployWfModule extends AbstractMojo {
       }
 
       moduleXml.output();
+
+      // Copy out of target/ into wildfly
+      utils.copy(Paths.get(project.getBuild().getDirectory())
+                      .resolve("modules"),
+                 Paths.get(wildflyPath)
+                      .resolve("modules"),
+                 true, null);
     } catch (final MojoFailureException mfe) {
       throw mfe;
     } catch (final Throwable t) {
