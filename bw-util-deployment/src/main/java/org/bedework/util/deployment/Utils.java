@@ -414,7 +414,8 @@ public class Utils {
 
   final List<String> skipNames = Arrays.asList("module.xml",
                                                "maven-metadata-local.xml",
-                                               "_remote.repositories");
+                                               "_remote.repositories",
+                                               "resolver-status.properties");
 
   public List<SplitName> getFiles(final Path pathToFile,
                                   final String artifactId)
