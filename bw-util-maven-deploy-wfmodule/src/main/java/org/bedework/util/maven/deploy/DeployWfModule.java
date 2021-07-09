@@ -165,12 +165,17 @@ public class DeployWfModule extends AbstractMojo {
                      fileArtifacts);
       }
 
+      /* This will only work if we determine what the jar
+         dependencies are for module dependencies and delete
+         them from the fileArtifacts list
+
       if (!fileArtifacts.isEmpty()) {
         utils.warn("WfModules: Unsatisfied dependencies:");
         for (final FileArtifact fa: fileArtifacts) {
           utils.warn(format("WfModules: %s", fa.toString()));
         }
       }
+       */
 
       /*
       utils.info("project output: " + project.getBuild().getDirectory());
