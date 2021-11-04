@@ -7,8 +7,11 @@ import org.bedework.util.deployment.Utils;
 import org.bedework.util.deployment.XmlFile;
 
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import java.nio.file.Path;
+
+import static org.bedework.util.maven.deploy.DeployWfModule.isEmpty;
 
 /**
  * User: mike Date: 2/11/21 Time: 00:35
@@ -79,6 +82,32 @@ public class ModuleXml extends XmlFile {
       mNode.setAttribute("export", "true");
     }
 
+    if (!isEmpty(val.getExports())) {
+      final Node expNode =
+              mNode.appendChild(doc.createElement("exports"));
+
+      for (final String s: val.getExports()) {
+        if (s.startsWith("!")) {
+          final Element excNode = doc.createElement("exclude");
+          excNode.setAttribute("path", s.substring(1));
+          expNode.appendChild(excNode);
+          continue;
+        }
+
+        final Element incNode = doc.createElement("include");
+        incNode.setAttribute("path", s);
+        expNode.appendChild(incNode);
+      }
+    }
+
     el.appendChild(mNode);
+
+    if (val.isImportMeta()) {
+      // Add filter to include META-INF
+      final Element incNode = doc.createElement("include");
+      incNode.setAttribute("path", "META-INF");
+      mNode.appendChild(doc.createElement("imports"))
+           .appendChild(incNode);
+    }
   }
 }

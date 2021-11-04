@@ -5,6 +5,8 @@ package org.bedework.util.maven.deploy;
 
 import org.apache.maven.plugins.annotations.Parameter;
 
+import java.util.List;
+
 import static org.bedework.util.deployment.Utils.compareStrings;
 
 /**
@@ -18,11 +20,22 @@ public class ModuleDependency
   @Parameter(defaultValue = "true")
   private boolean export = true;
 
+  @Parameter
+  private List<String> exports;
+
+  @Parameter(defaultValue = "false")
+  boolean importMeta = false;
+
   public ModuleDependency() {}
 
-  public ModuleDependency(final String name, final boolean export) {
+  public ModuleDependency(final String name,
+                          final boolean export,
+                          final List<String> exports,
+                          final boolean importMeta) {
     this.name = name;
     this.export = export;
+    this.exports = exports;
+    this.importMeta = importMeta;
   }
 
   @Override
@@ -45,5 +58,13 @@ public class ModuleDependency
 
   public boolean isExport() {
     return export;
+  }
+
+  public List<String> getExports() {
+    return exports;
+  }
+
+  public boolean isImportMeta() {
+    return importMeta;
   }
 }

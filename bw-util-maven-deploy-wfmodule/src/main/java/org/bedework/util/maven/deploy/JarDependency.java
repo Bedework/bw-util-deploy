@@ -12,7 +12,13 @@ import java.util.List;
  */
 public class JarDependency extends FileInfo {
   @Parameter(defaultValue = "true")
-  boolean export= true;
+  boolean export = true;
+
+  @Parameter
+  private List<String> exports;
+
+  @Parameter(defaultValue = "false")
+  boolean importMeta = false;
 
   @Parameter
   private String moduleName;
@@ -77,6 +83,14 @@ public class JarDependency extends FileInfo {
 
   public boolean isExport() {
     return export;
+  }
+
+  public List<String> getExports() {
+    return exports;
+  }
+
+  public boolean isImportMeta() {
+    return importMeta;
   }
 
   public List<JarDependency> getJarDependencies() {

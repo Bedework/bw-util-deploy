@@ -368,7 +368,9 @@ public class DeployWfModule extends AbstractMojo {
           utils.debug("Deploy jar dependency " + jd);
           moduleDependencies.add(
                   new ModuleDependency(jd.getModuleName(),
-                                       jd.isExport()));
+                                       jd.isExport(),
+                                       jd.getExports(),
+                                       jd.importMeta));
 
           // Find the repo
 
@@ -393,7 +395,9 @@ public class DeployWfModule extends AbstractMojo {
       }
 
       if (includeJavax) {
-        final ModuleDependency md = new ModuleDependency("javax.api", true);
+        final ModuleDependency md =
+                new ModuleDependency("javax.api", true,
+                                     null, false);
 
         if (!moduleDependencies.contains(md)) {
           moduleDependencies.add(md);
