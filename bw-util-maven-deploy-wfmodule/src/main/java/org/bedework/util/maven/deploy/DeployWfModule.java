@@ -11,7 +11,6 @@ import org.apache.maven.model.Model;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
@@ -32,9 +31,9 @@ import static java.lang.String.format;
 
 /**
  * User: mike Date: 12/18/15 Time: 00:15
+        defaultPhase = LifecyclePhase.INSTALL,
  */
 @Mojo(name = "bw-deploy-wfmodule",
-        defaultPhase = LifecyclePhase.INSTALL,
         requiresDependencyCollection = ResolutionScope.RUNTIME,
         requiresDependencyResolution = ResolutionScope.RUNTIME)
 public class DeployWfModule extends AbstractMojo {
@@ -52,7 +51,7 @@ public class DeployWfModule extends AbstractMojo {
    */
   @Parameter(required = true,
           defaultValue = "${org.bedework.deployment.basedir}/wildfly")
-  private String wildflyPath;
+  private String modulesParentPath;
 
   @Parameter
   private boolean debug;
@@ -296,7 +295,7 @@ public class DeployWfModule extends AbstractMojo {
   }
 
   private Path getPathToSystemModuleMain(final String moduleName) {
-    return Paths.get(wildflyPath)
+    return Paths.get(modulesParentPath)
                 .resolve("modules")
                 .resolve("system")
                 .resolve("layers")
@@ -413,7 +412,7 @@ public class DeployWfModule extends AbstractMojo {
       // Copy out of target/ into wildfly
       utils.copy(Paths.get(project.getBuild().getDirectory())
                       .resolve("modules"),
-                 Paths.get(wildflyPath)
+                 Paths.get(modulesParentPath)
                       .resolve("modules"),
                  true, null);
     } catch (final MojoFailureException mfe) {
