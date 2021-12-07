@@ -50,7 +50,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import static java.nio.file.FileVisitResult.CONTINUE;
-import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
+import static java.nio.file.FileVisitResult.TERMINATE;
 import static java.nio.file.StandardCopyOption.COPY_ATTRIBUTES;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -337,16 +337,16 @@ public class Utils {
             return CONTINUE;
           }
 
-          error(dir.toString() + " already exists and is not a directory");
-          return SKIP_SUBTREE;
+          throw new RuntimeException(
+                  dir.toString() +
+                          " already exists and is not a directory");
         }
         //Utils.debug("**** Copy dir " + dir);
         Files.copy(dir, newdir, copyOptionAttributes);
       } catch (final FileAlreadyExistsException faee) {
-        error("File already exists" + faee.getFile());
+        warn("File already exists" + faee.getFile());
       } catch (final Throwable t) {
-        error("Unable to create: " + newdir + ": " + t);
-        return SKIP_SUBTREE;
+        throw new RuntimeException("Unable to create: " + newdir + ": " + t);
       }
       return CONTINUE;
     }
@@ -371,6 +371,7 @@ public class Utils {
         } catch (final Throwable t) {
           error("Unable to copy all attributes to: " + newdir +
                         ": " + t);
+          throw new RuntimeException(t);
         }
       }
       return CONTINUE;
@@ -384,7 +385,7 @@ public class Utils {
       } else {
         error("Unable to copy: " + file + "; " + exc);
       }
-      return CONTINUE;
+      return TERMINATE;
     }
   }
 
