@@ -37,7 +37,7 @@ import static java.lang.String.format;
         requiresDependencyCollection = ResolutionScope.RUNTIME,
         requiresDependencyResolution = ResolutionScope.RUNTIME)
 public class DeployWfModule extends AbstractMojo {
-  @Parameter(defaultValue = "${project.build.directory}", readonly = true)
+  @Parameter(defaultValue = "${project.build.directory}")
   private String target;
 
   @Parameter(defaultValue = "${project}", readonly = true, required = true)
@@ -47,17 +47,24 @@ public class DeployWfModule extends AbstractMojo {
   private String localRepository;
 
   /**
-   * Location of the wildfly instance
+   * Location of the module parent
    */
   @Parameter(required = true,
           defaultValue = "${org.bedework.deployment.basedir}/wildfly")
   private String modulesParentPath;
+
+  /* So we can override from the command line. */
+  @Parameter(defaultValue = "${org.bedework.modules.parent.path}")
+  private String overrideModulesParentPath;
 
   @Parameter
   private boolean debug;
 
   @Parameter(defaultValue = "${org.bedework.deploy.modules}")
   private boolean deployModules;
+
+  @Parameter(defaultValue = "${org.bedework.thin.modules}")
+  protected boolean buildThin;
 
   @Parameter
   private List<FileInfo> jarResources;
@@ -103,6 +110,14 @@ public class DeployWfModule extends AbstractMojo {
     debug = logger.isDebugEnabled();
     if (debug) {
       utils.setDebug(true);
+    }
+
+    if (overrideModulesParentPath != null) {
+      modulesParentPath = overrideModulesParentPath;
+    }
+
+    if (buildThin) {
+      noArtifact = true;
     }
 
     final List<FileArtifact> fileArtifacts = new ArrayList<>();
@@ -341,7 +356,7 @@ public class DeployWfModule extends AbstractMojo {
                            theArtifact.getMavenArtifact().getFile()));
       }
 
-      if (pathToFile != null) {
+      if (!buildThin && (pathToFile != null)) {
         final SplitName fn = deployFile(resourceFiles,
                                         pathToModuleMain,
                                         pathToFile,
@@ -384,6 +399,11 @@ public class DeployWfModule extends AbstractMojo {
 
       if (jarResources != null) {
         for (final FileInfo jr: jarResources) {
+          if (buildThin) {
+            moduleXml.addResourceArtifact(jr);
+            continue;
+          }
+
           jr.setRepository(localRepository);
           final SplitName jrFn = deployFile(resourceFiles,
                                             pathToModuleMain,
@@ -409,11 +429,14 @@ public class DeployWfModule extends AbstractMojo {
 
       moduleXml.output();
 
-      // Copy out of target/ into wildfly
+      final Path modulesPath = Paths.get(modulesParentPath)
+                                    .resolve("modules");
+      utils.makeDir(modulesPath.toString());
+
+      // Copy out of target/ into modules directory
       utils.copy(Paths.get(project.getBuild().getDirectory())
                       .resolve("modules"),
-                 Paths.get(modulesParentPath)
-                      .resolve("modules"),
+                 modulesPath,
                  true, null);
     } catch (final MojoFailureException mfe) {
       throw mfe;

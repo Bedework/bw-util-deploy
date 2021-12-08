@@ -41,8 +41,7 @@ public class ModuleXml extends XmlFile {
       "  ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.\n" +
       "  -->\n" +
       "<module xmlns=\"urn:jboss:module:1.8\">\n" +
-      "    <resources>\n" +
-      "    </resources>\n" +
+      "    <resources/>\n" +
       "\n" +
       "</module>\n";
   public ModuleXml(final Utils utils,
@@ -54,7 +53,7 @@ public class ModuleXml extends XmlFile {
     updated = true;
   }
 
-  void addResource(final String name) throws Throwable {
+  void addResource(final String name) {
     final Element el = findElement(root, "resources");
     if (el == null) {
       utils.error("Cannot locate element resources");
@@ -68,7 +67,23 @@ public class ModuleXml extends XmlFile {
     el.appendChild(resNode);
   }
 
-  void addDependency(final ModuleDependency val) throws Throwable {
+  void addResourceArtifact(final FileInfo resource) {
+    final Element el = findElement(root, "resources");
+    if (el == null) {
+      utils.error("Cannot locate element resources");
+      return;
+    }
+
+    final Element resNode = doc.createElement("artifact");
+    resNode.setAttribute("name",
+                         String.format("${%s:%s}",
+                                       resource.getGroupId(),
+                                       resource.getArtifactId()));
+
+    el.appendChild(resNode);
+  }
+
+  void addDependency(final ModuleDependency val) {
     Element el = findElement(root, "dependencies");
     if (el == null) {
       el = doc.createElement("dependencies");
