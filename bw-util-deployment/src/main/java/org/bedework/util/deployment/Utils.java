@@ -89,7 +89,7 @@ public class Utils {
     final File f = new File(path);
 
     if (!f.exists()) {
-      return f.mkdir();
+      return f.mkdirs();
     }
 
     if (!f.isDirectory()) {
