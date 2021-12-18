@@ -5,12 +5,11 @@
   <parent>
     <groupId>org.bedework</groupId>
     <artifactId>bw-util-deploy</artifactId>
-    <version>4.1.1-SNAPSHOT</version>
+    <version>5.0.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>bw-util-deployment</artifactId>
-
-  <packaging>jar</packaging>
+  <name>Bedework: A number of utility classes and methods for deploying ears and wars on wildfly</name>
 
   <dependencies>
     <dependency>

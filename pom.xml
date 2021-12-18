@@ -1,63 +1,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.bedework</groupId>
+
+  <parent>
+    <groupId>org.bedework</groupId>
+    <artifactId>bedework-parent</artifactId>
+    <version>4.0.0-SNAPSHOT</version>
+  </parent>
+
   <artifactId>bw-util-deploy</artifactId>
-  <version>4.1.1-SNAPSHOT</version>
+  <version>5.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>bw-util-deploy</name>
+  <name>Bedework: A number of utility classes and methods for deployment on wildfly</name>
+
   <description>This project provides a number of utility classes and methods for deployment</description>
   <url>https://github.com/Bedework/bw-util-deploy</url>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <!-- Maven Plugin Versions -->
-    <maven.compiler.plugin.version>2.3.2</maven.compiler.plugin.version>
-    <maven.source.plugin.version>2.1.2</maven.source.plugin.version>
-
-    <!-- Third Party Library Versions -->
-    <http-client.version>4.5.13</http-client.version>
-    <http-core.version>4.4.8</http-core.version>
-
-    <commons-codec.version>1.15</commons-codec.version>
-    <commons-lang.version>2.3</commons-lang.version>
-    <jackson.version>2.9.6</jackson.version>
-    <jms.version>2.0</jms.version>
-    <jolokia.version>1.3.1</jolokia.version>
-    <junit.version>4.13.1</junit.version>
-    <servlet-api.version>4.0.0</servlet-api.version>
-
-    <maven.version>3.6.3</maven.version>
-    <maven-plugin-annotations.version>3.6.0</maven-plugin-annotations.version>
-    <maven-plugin-api.version>3.6.3</maven-plugin-api.version>
-
-    <!-- For runnable version -->
-    <log4j.version>2.16.0</log4j.version>
-  </properties>
-
-  <organization>
-    <name>Bedework</name>
-    <url>https://github.com/Bedework</url>
-  </organization>
-
-  <licenses>
-    <license>
-      <name>Apache License Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-    </license>
-  </licenses>
-
-  <scm>
-    <connection>scm:git:git@github.com:Bedework/bw-util-deploy.git</connection>
-    <developerConnection>scm:git:git@github.com:Bedework/bw-util-deploy.git</developerConnection>
-    <url>https://github.com/Bedework/bw-util-deploy</url>
-    <tag>bw-util-4.0.9</tag>
-  </scm>
-
-  <issueManagement>
-    <system>github</system>
-
-    <url>https://github.com/Bedework/bw-util-deploy/issues</url>
-  </issueManagement>
 
   <modules>
     <module>bw-util-deployment</module>
@@ -65,224 +21,12 @@
     <module>bw-util-maven-deploy-wfmodule</module>
   </modules>
 
-  <developers>
-    <developer>
-      <name>Mike Douglass</name>
-      <organization>
-        Bedework Commercial Services
-      </organization>
-      <organizationUrl>https://bedework.com/</organizationUrl>
-    </developer>
-    <developer>
-      <name>Arlen Johnson</name>
-      <organization>
-        Spherical Cow Group
-      </organization>
-      <organizationUrl>http://sphericalcowgroup.com/</organizationUrl>
-    </developer>
-  </developers>
-
-  <distributionManagement>
-    <snapshotRepository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </snapshotRepository>
-    <repository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-    </repository>
-  </distributionManagement>
-
-  <dependencyManagement>
-    <dependencies>
-      <!-- Third Party Libraries -->
-
-      <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpclient</artifactId>
-        <version>${http-client.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpcore</artifactId>
-        <version>${http-core.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
-        <version>${servlet-api.version}</version>
-        <scope>provided</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.maven</groupId>
-        <artifactId>maven-core</artifactId>
-        <version>${maven.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.maven</groupId>
-        <artifactId>maven-plugin-api</artifactId>
-        <version>${maven-plugin-api.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.maven</groupId>
-        <artifactId>maven-plugin-registry</artifactId>
-        <version>${maven-plugin-api.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.maven.plugin-tools</groupId>
-        <artifactId>maven-plugin-annotations</artifactId>
-        <version>${maven-plugin-annotations.version}</version>
-        <scope>provided</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
   <build>
-    <extensions>
-      <extension>
-        <groupId>org.apache.maven.wagon</groupId>
-        <artifactId>wagon-ssh</artifactId>
-        <version>2.9</version>
-      </extension>
-    </extensions>
     <plugins>
-      <!-- Specify the compiler options and settings -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven.compiler.plugin.version}</version>
-        <configuration>
-          <showDeprecation>false</showDeprecation>
-          <showWarnings>false</showWarnings>
-
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
-      </plugin>
-
-      <!-- Produce source jars during the 'verify' phase -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>${maven.source.plugin.version}</version>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>jar</goal>
-              <goal>test-jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>2.5</version>
-        <configuration>
-          <autoVersionSubmodules>true</autoVersionSubmodules>
-          <useReleaseProfile>false</useReleaseProfile>
-          <releaseProfiles>release</releaseProfiles>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.1.1</version>
-        <configuration>
-          <additionalJOption>-Xdoclint:none</additionalJOption>
-          <failOnError>false</failOnError>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>versions-maven-plugin</artifactId>
-        <version>2.3</version>
-        <configuration>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>3.5</version>
-        <executions>
-          <execution>
-            <id>default-descriptor</id>
-            <phase>process-classes</phase>
-          </execution>
-        </executions>
-        <configuration>
-          <goalPrefix>bw-util-deployment</goalPrefix>
-          <!--
-          <outputDirectory>target/dir</outputDirectory>-->
-        </configuration>
       </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <profile>
-      <id>release</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-            <version>2.2.1</version>
-            <executions>
-              <execution>
-                <id>attach-sources</id>
-                <goals>
-                  <goal>jar-no-fork</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.1.1</version>
-            <executions>
-              <execution>
-                <id>attach-javadocs</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <additionalJOption>-Xdoclint:none</additionalJOption>
-              <failOnError>false</failOnError>
-            </configuration>
-          </plugin>
-
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.5</version>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>
