@@ -15,6 +15,13 @@
   <description>This project provides a number of utility classes and methods for deployment</description>
   <url>https://github.com/Bedework/bw-util-deploy</url>
 
+  <scm>
+    <connection>scm:git:git@github.com:Bedework/bw-util-deploy.git</connection>
+    <developerConnection>scm:git:git@github.com:Bedework/bw-util-deploy.git</developerConnection>
+    <url>https://github.com/Bedework/bw-util-deploy</url>
+    <tag>bw-util-4.0.9</tag>
+  </scm>
+
   <modules>
     <module>bw-util-deployment</module>
     <module>bw-util-maven-deploy</module>
