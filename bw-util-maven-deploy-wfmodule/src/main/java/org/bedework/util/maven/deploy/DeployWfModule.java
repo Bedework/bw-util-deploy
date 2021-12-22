@@ -75,7 +75,7 @@ public class DeployWfModule extends AbstractMojo {
   @Parameter
   private List<ModuleDependency> moduleDependencies;
 
-  @Parameter(required = true)
+  @Parameter
   private String moduleName;
 
   @Parameter
@@ -102,6 +102,10 @@ public class DeployWfModule extends AbstractMojo {
   public void execute() throws MojoFailureException {
     if (!deployModules) {
       return;
+    }
+
+    if (moduleName == null) {
+      throw new MojoFailureException("moduleName is required");
     }
 
     final Log logger = getLog();
@@ -399,6 +403,8 @@ public class DeployWfModule extends AbstractMojo {
 
       if (jarResources != null) {
         for (final FileInfo jr: jarResources) {
+          utils.info("buildThin=" + buildThin +
+                  " pmm=" + pathToModuleMain);
           if (buildThin) {
             moduleXml.addResourceArtifact(jr);
             continue;

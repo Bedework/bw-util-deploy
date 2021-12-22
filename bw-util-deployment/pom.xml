@@ -93,27 +93,6 @@
           </programs>
         </configuration>
       </plugin>
-
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <groupId>org.apache.maven.plugins</groupId>
-        <version>3.3.0</version>
-        <executions>
-          <execution>
-            <id>deployer-assembly</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <configuration>
-              <descriptors>
-                <descriptor>src/assembly/deployer.xml</descriptor>
-              </descriptors>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
     </plugins>
   </build>
 </project>
