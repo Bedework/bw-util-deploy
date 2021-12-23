@@ -63,6 +63,10 @@ public class DeployWfModule extends AbstractMojo {
   @Parameter(defaultValue = "${org.bedework.deploy.modules}")
   private boolean deployModules;
 
+  @Parameter(property="org.bedework.modulesRootDir",
+          defaultValue = "modules")
+  private String modulesRootDir;
+
   @Parameter(defaultValue = "${org.bedework.thin.modules}")
   protected boolean buildThin;
 
@@ -307,7 +311,7 @@ public class DeployWfModule extends AbstractMojo {
 
   private Path getPathToModuleMain(final String moduleName) {
     return Paths.get(project.getBuild().getDirectory())
-                .resolve("modules")
+                .resolve(modulesRootDir)
                 .resolve(moduleName.replace('.', '/'))
                 .resolve("main")
                 .toAbsolutePath();
@@ -315,7 +319,7 @@ public class DeployWfModule extends AbstractMojo {
 
   private Path getPathToSystemModuleMain(final String moduleName) {
     return Paths.get(modulesParentPath)
-                .resolve("modules")
+                .resolve(modulesRootDir)
                 .resolve("system")
                 .resolve("layers")
                 .resolve("base")
@@ -436,12 +440,12 @@ public class DeployWfModule extends AbstractMojo {
       moduleXml.output();
 
       final Path modulesPath = Paths.get(modulesParentPath)
-                                    .resolve("modules");
+                                    .resolve(modulesRootDir);
       utils.makeDir(modulesPath.toString());
 
       // Copy out of target/ into modules directory
       utils.copy(Paths.get(project.getBuild().getDirectory())
-                      .resolve("modules"),
+                      .resolve(modulesRootDir),
                  modulesPath,
                  true, null);
     } catch (final MojoFailureException mfe) {
