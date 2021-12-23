@@ -413,10 +413,10 @@ public class Utils {
 
   }
 
-  final List<String> skipNames = Arrays.asList("module.xml",
-                                               "maven-metadata-local.xml",
-                                               "_remote.repositories",
-                                               "resolver-status.properties");
+  final List<String> skipNames = Arrays.asList(
+          "module.xml",
+          "_remote.repositories",
+          "resolver-status.properties");
 
   public List<SplitName> getFiles(final Path pathToFile,
                                   final String artifactId)
@@ -439,7 +439,8 @@ public class Utils {
     final List<SplitName> files = new ArrayList<>();
 
     for (final String nm: names) {
-      if (skipNames.contains(nm)) {
+      if (skipNames.contains(nm) ||
+              nm.startsWith("maven-metadata")) {
         debug("Skipped " + nm);
         continue;
       }
