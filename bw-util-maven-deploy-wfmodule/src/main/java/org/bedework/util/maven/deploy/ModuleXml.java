@@ -53,6 +53,14 @@ public class ModuleXml extends XmlFile {
     updated = true;
   }
 
+  void addMainClass(final String mainClass) {
+    final Element mcNode = doc.createElement("main-class");
+    mcNode.setAttribute("name",
+                         mainClass);
+
+    root.appendChild(mcNode);
+  }
+
   void addResource(final String name) {
     final Element el = findElement(root, "resources");
     if (el == null) {

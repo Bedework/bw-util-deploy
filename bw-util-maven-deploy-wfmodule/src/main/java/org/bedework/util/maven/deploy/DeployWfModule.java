@@ -83,6 +83,9 @@ public class DeployWfModule extends AbstractMojo {
   private String moduleName;
 
   @Parameter
+  private String mainClass;
+
+  @Parameter
   private FileInfo artifact;
 
   /**
@@ -176,7 +179,8 @@ public class DeployWfModule extends AbstractMojo {
                                                 moduleDependencies),
                      Paths.get(target),
                      jarResources,
-                     fileArtifacts);
+                     fileArtifacts,
+                     mainClass);
         removeArtifact(fileArtifacts, artifact);
       } else {
         deployModule(JarDependency.forNoArtifact(moduleName,
@@ -184,7 +188,8 @@ public class DeployWfModule extends AbstractMojo {
                                                 moduleDependencies),
                      null,
                      jarResources,
-                     fileArtifacts);
+                     fileArtifacts,
+                     mainClass);
       }
 
       /* This will only work if we determine what the jar
@@ -319,7 +324,7 @@ public class DeployWfModule extends AbstractMojo {
 
   private Path getPathToSystemModuleMain(final String moduleName) {
     return Paths.get(modulesParentPath)
-                .resolve(modulesRootDir)
+                .resolve("modules")
                 .resolve("system")
                 .resolve("layers")
                 .resolve("base")
@@ -331,7 +336,8 @@ public class DeployWfModule extends AbstractMojo {
   private void deployModule(final JarDependency fileInfo,
                             final Path pathToFile,
                             final List<FileInfo> jarResources,
-                            final List<FileArtifact> artifacts)
+                            final List<FileArtifact> artifacts,
+                            final String mainClass)
           throws MojoFailureException {
     try {
       final Path pathToModuleMain = getPathToModuleMain(
@@ -355,6 +361,10 @@ public class DeployWfModule extends AbstractMojo {
               new ModuleXml(utils,
                             xmlPath,
                             fileInfo.getModuleName());
+
+      if (mainClass != null) {
+        moduleXml.addMainClass(mainClass);
+      }
 
       final FileArtifact theArtifact = findArtifact(artifacts, fileInfo);
 
@@ -400,7 +410,8 @@ public class DeployWfModule extends AbstractMojo {
           deployModule(jd,
                        jd.getRepoDir(),
                        null,
-                       artifacts);
+                       artifacts,
+                       null);
           removeArtifact(artifacts, jd);
         }
       }
