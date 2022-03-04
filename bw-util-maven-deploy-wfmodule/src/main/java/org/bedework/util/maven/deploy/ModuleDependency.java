@@ -20,6 +20,9 @@ public class ModuleDependency
   @Parameter(defaultValue = "true")
   private boolean export = true;
 
+  @Parameter(defaultValue = "false")
+  private boolean optional;
+
   @Parameter
   private List<String> exports;
 
@@ -58,6 +61,10 @@ public class ModuleDependency
 
   public boolean isExport() {
     return export;
+  }
+
+  public boolean isOptional() {
+    return optional;
   }
 
   public List<String> getExports() {

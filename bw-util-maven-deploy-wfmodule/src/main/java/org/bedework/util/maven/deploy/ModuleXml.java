@@ -105,6 +105,10 @@ public class ModuleXml extends XmlFile {
       mNode.setAttribute("export", "true");
     }
 
+    if (val.isOptional()) {
+      mNode.setAttribute("optional", "true");
+    }
+
     if (!isEmpty(val.getExports())) {
       final Node expNode =
               mNode.appendChild(doc.createElement("exports"));
