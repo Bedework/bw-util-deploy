@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.regex.Pattern;
 
 import static java.lang.String.format;
 
@@ -546,6 +547,12 @@ public class DeployWfModule extends AbstractMojo {
                      fileInfo);
   }
 
+  private static String cachedSnapshotVersionPattern =
+          ".*?-\\d*\\.\\d*.*";
+
+  private static Pattern compiledPattern =
+          Pattern.compile(cachedSnapshotVersionPattern);
+
   /** Look for a file with the same prefix and type as the param
    *
    * @param files list of files to check
@@ -581,6 +588,10 @@ public class DeployWfModule extends AbstractMojo {
       }
 
       if (sn.getVersion().endsWith("-tests")) {
+        continue;
+      }
+
+      if (compiledPattern.matcher(sn.getVersion()).find()) {
         continue;
       }
 
