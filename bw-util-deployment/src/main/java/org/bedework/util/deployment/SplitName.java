@@ -204,8 +204,27 @@ public class SplitName implements Comparable<SplitName> {
     return version;
   }
 
+  public String getVersionWithoutClassifier() {
+    if (version == null) {
+      return null;
+    }
+
+    final int index = version.lastIndexOf("-");
+
+    if (index < 0) {
+      return version;
+    }
+
+    return version.substring(0, index);
+  }
+
   @Override
   public int compareTo(final SplitName that) {
+    return compareTo(that, true);
+  }
+
+  public int compareTo(final SplitName that,
+                       final boolean includeClassifier) {
     int res = compareStrings(getArtifactId(),
                              that.getArtifactId());
     if (res != 0) {
@@ -218,16 +237,27 @@ public class SplitName implements Comparable<SplitName> {
       return res;
     }
 
+    if (!includeClassifier) {
+      return compareStrings(getVersionWithoutClassifier(),
+                            that.getVersionWithoutClassifier());
+    }
+
     return compareStrings(getVersion(),
                           that.getVersion());
   }
 
+  @Override
   public boolean equals(final Object o) {
+    return equals(o, true);
+  }
+
+  public boolean equals(final Object o,
+                        final boolean includeClassifier) {
     if (!(o instanceof SplitName)) {
       return false;
     }
 
-    return compareTo((SplitName)o) == 0;
+    return compareTo((SplitName)o, includeClassifier) == 0;
   }
 
   public String toString() {

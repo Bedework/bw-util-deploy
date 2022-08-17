@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
@@ -376,11 +377,14 @@ public class DeployWfModule extends AbstractMojo {
       }
 
       if (!buildThin && (pathToFile != null)) {
-        final SplitName fn = deployFile(resourceFiles,
-                                        pathToModuleMain,
-                                        pathToFile,
-                                        fileInfo);
-        moduleXml.addResource(fn.getName());
+        final List<SplitName> fns =
+                deployFiles(resourceFiles,
+                            pathToModuleMain,
+                            pathToFile,
+                            fileInfo);
+        for (final var fn: fns) {
+          moduleXml.addResource(fn.getName());
+        }
       }
 
       // First deploy any jar dependencies
@@ -427,11 +431,14 @@ public class DeployWfModule extends AbstractMojo {
           }
 
           jr.setRepository(localRepository);
-          final SplitName jrFn = deployFile(resourceFiles,
-                                            pathToModuleMain,
-                                            jr.getRepoDir(),
-                                            jr);
-          moduleXml.addResource(jrFn.getName());
+          final List<SplitName> jrFns =
+                  deployFiles(resourceFiles,
+                              pathToModuleMain,
+                              jr.getRepoDir(),
+                              jr);
+          for (final var jrFn: jrFns) {
+            moduleXml.addResource(jrFn.getName());
+          }
         }
       }
 
@@ -471,32 +478,52 @@ public class DeployWfModule extends AbstractMojo {
   /*
      returns the SplitName for
    */
-  private SplitName deployFile(final List<SplitName> resourceFiles,
-                               final Path pathToModuleMain,
-                               final Path pathToFile,
-                               final FileInfo fileInfo)
+  private List<SplitName> deployFiles(
+          final List<SplitName> resourceFiles,
+          final Path pathToModuleMain,
+          final Path pathToFile,
+          final FileInfo fileInfo)
           throws MojoFailureException {
     try {
       //final File fileDir = utils.directory(pathToFile);
-      final SplitName fn = matchFile(pathToFile, fileInfo);
 
-      if (fn == null) {
+      final List<SplitName> fns = matchFiles(pathToFile, fileInfo);
+
+      if (fns.isEmpty()) {
         throw new MojoFailureException(
-                format("Exactly one deployable module is required. " +
+                format("Deployable jars are required. " +
                                "None found at %s with name %s and type %s",
                        pathToFile,
                        fileInfo.getArtifactId(),
                        fileInfo.getType()));
       }
 
-      utils.debug("Found file " + fn);
+      if (utils.debug()) {
+        utils.debug("Found file(s) " +
+                            fns.stream()
+                               .map(String::valueOf)
+                               .collect(Collectors.joining("\n", "{", "}")));
+      }
 
       // Find deployed file
-      final SplitName mfn = matchFile(resourceFiles, fileInfo);
+      final List<SplitName> mfns =
+              matchFiles(resourceFiles, fileInfo);
       final File mainDir = pathToModuleMain.toFile();
 
-      if (mfn != null) {
-        utils.debug("Found module file " + mfn);
+      if (!mfns.isEmpty()) {
+        if (utils.debug()) {
+          utils.debug("Found module file(s) " +
+                              mfns.stream()
+                                 .map(String::valueOf)
+                                 .collect(Collectors.joining("\n", "{", "}")));
+        }
+
+        /* All files in the lists are the same version.
+           Just check the first one
+         */
+
+        final var mfn = mfns.get(0);
+        final var fn = fns.get(0);
 
         // Is the deployed version later?
         // Deploy if same to allow for updates.
@@ -505,25 +532,30 @@ public class DeployWfModule extends AbstractMojo {
                             fn.getName(),
                             mfn.getVersion(),
                             fn.getVersion()));
-          return mfn;
+          return mfns;
         }
 
         // Delete the current deployed version
-        final File f = utils.fileOrDir(mainDir, mfn.getName());
-        utils.info("Delete file " + f);
-        utils.deleteAll(f.toPath());
-        resourceFiles.remove(mfn);
+
+        for (final var del: mfns) {
+          final File f = utils.fileOrDir(mainDir, del.getName());
+          utils.info("Delete file " + f);
+          utils.deleteAll(f.toPath());
+          resourceFiles.remove(del);
+        }
       }
 
-      // copy in the file.
-      utils.info(format("Deploy file %s to %s",
-                        fn.getName(), mainDir));
-      final File theFile = utils.file(pathToFile.toFile(),
-                                      fn.getName(), true);
-      Files.copy(theFile.toPath(),
-                 mainDir.toPath().resolve(fn.getName()));
+      // copy in the files.
+      for (final var fn: fns) {
+        utils.info(format("Deploy file %s to %s",
+                          fn.getName(), mainDir));
+        final File theFile = utils.file(pathToFile.toFile(),
+                                        fn.getName(), true);
+        Files.copy(theFile.toPath(),
+                   mainDir.toPath().resolve(fn.getName()));
+      }
 
-      return fn;
+      return fns;
     } catch (final MojoFailureException mfe) {
       throw mfe;
     } catch (final Throwable t) {
@@ -539,11 +571,11 @@ public class DeployWfModule extends AbstractMojo {
    * @return SplitName of single matching file or null
    * @throws MojoFailureException on fatal error
    */
-  private SplitName matchFile(final Path pathToFile,
-                              final FileInfo fileInfo)
+  private List<SplitName> matchFiles(final Path pathToFile,
+                                     final FileInfo fileInfo)
           throws MojoFailureException {
-    return matchFile(utils.getFiles(pathToFile,
-                                    fileInfo.getArtifactId()),
+    return matchFiles(utils.getFiles(pathToFile,
+                                     fileInfo.getArtifactId()),
                      fileInfo);
   }
 
@@ -553,22 +585,24 @@ public class DeployWfModule extends AbstractMojo {
   private static Pattern compiledPattern =
           Pattern.compile(cachedSnapshotVersionPattern);
 
-  /** Look for a file with the same prefix and type as the param
+  /** Look for file with the same prefix and type as the param
+   * Multiple files are valid if version matches after splitting off
+   * classifier.
    *
    * @param files list of files to check
    * @param fileInfo for name and/or type
-   * @return SplitName of single matching file or null
+   * @return SplitName of matching files or null
    * @throws MojoFailureException on fatal error
    */
-  private SplitName matchFile(final List<SplitName> files,
-                              final FileInfo fileInfo)
+  private List<SplitName> matchFiles(final List<SplitName> files,
+                                     final FileInfo fileInfo)
           throws MojoFailureException {
     utils.debug("Match " + fileInfo);
-    if (files == null) {
-      return null;
-    }
+    final List<SplitName> res = new ArrayList<>();
 
-    SplitName file = null;
+    if (files == null) {
+      return res;
+    }
 
     for (final SplitName sn: files) {
       utils.debug("Try " + sn);
@@ -595,15 +629,18 @@ public class DeployWfModule extends AbstractMojo {
         continue;
       }
 
-      if (file != null) {
-        throw new MojoFailureException(
-                "Exactly one deployable module resource of given name is required. Already found: " + file);
+      for (final var file: res) {
+        if (!file.equals(sn, false)) {
+          throw new MojoFailureException(
+                  "One deployable module resource of given name " +
+                          "and version is required. Already found: " + file);
+        }
       }
 
-      file = sn;
+      res.add(sn);
     }
 
-    return file;
+    return res;
   }
 
   public static boolean isEmpty(final Collection<?> val) {
