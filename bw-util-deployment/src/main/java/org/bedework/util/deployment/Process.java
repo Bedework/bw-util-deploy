@@ -41,14 +41,6 @@ import static org.bedework.util.deployment.NetUtil.DavChild;
  * @author douglm
  */
 public class Process extends AbstractMojo {
-  /** The path of the properties file */
-  public static final String propPropertiesFile =
-          "org.bedework.global.propertiesFile";
-
-  /** The path of directory containing the properties file */
-  public static final String propPropertiesDir =
-          "org.bedework.global.propertiesDir";
-
   /** The path of directory containing the appserver
    * This is the value of the baseDir parameter
    */
@@ -102,7 +94,7 @@ public class Process extends AbstractMojo {
 
   private void loadProperties() throws Throwable {
     utils.info("*********************************************" +
-                       "Loading properties from " + propsPath);
+                       "Properties file: " + propsPath);
     final File f = utils.file(propsPath);
 
     final FileReader fr = new FileReader(f);
@@ -114,8 +106,6 @@ public class Process extends AbstractMojo {
     props.setProperty(propWarsOnly, String.valueOf(warsonly));
 
     props.setProperty(propBaseDir, baseDirPath);
-    props.setProperty(propPropertiesFile, propsPath);
-    props.setProperty(propPropertiesDir, f.getParent());
   }
 
   public void setBaseDirPath(final String val) {
