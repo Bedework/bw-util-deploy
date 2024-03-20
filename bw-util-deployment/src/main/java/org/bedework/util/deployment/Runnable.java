@@ -145,8 +145,6 @@ public class Runnable {
         pe.setWarsOnly(true);
       } else if (args.ifMatch("--debug")) {
         debug = true;
-      } else if (args.ifMatch("--resources")) {
-        pe.setResourcesBase(args.next());
       } else if (args.ifMatch("--h")) {
         usage(null);
         return false;

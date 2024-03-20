@@ -80,8 +80,6 @@ public class Process extends AbstractMojo {
 
   private String earName;
 
-  private String resourcesBase;
-
   private String propsPath;
 
   private Properties props;
@@ -173,10 +171,6 @@ public class Process extends AbstractMojo {
     setWarsOnly(warName != null);
   }
 
-  public void setResourcesBase(final String val) {
-    resourcesBase = val;
-  }
-
   public void setPropsPath(final String val) {
     propsPath = val;
   }
@@ -217,12 +211,6 @@ public class Process extends AbstractMojo {
 
       deployDirPath = defaultVal(deployDirPath,
                                  "org.bedework.postdeploy.deploy");
-
-      /*
-      resourcesBase = defaultVal(resourcesBase,
-                                 "org.bedework.postdeploy.resource.base",
-                                 "--resources");
-                                 */
 
       if (errorMsg != null) {
         throw new MojoFailureException(errorMsg);

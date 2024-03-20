@@ -26,7 +26,7 @@ public class DeployEars extends AbstractMojo {
   @Parameter
   private String inUrl;
 
-  @Parameter
+  @Parameter(required = true)
   private String deployDirPath;
 
   @Parameter
@@ -79,7 +79,6 @@ public class DeployEars extends AbstractMojo {
     pe.setCleanup(cleanup);
     pe.setEarName(earName);
     pe.setWarName(warName);
-    pe.setResourcesBase(resourcesBase);
     pe.setPropsPath(propsPath);
 
     pe.execute();
