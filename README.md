@@ -55,4 +55,36 @@ For full details, see [Sonatype's documentation for using Maven to publish relea
   * Minor fixes to messages.
   * Fixed checking of deployed version for case when 
     no version deployed.
+
+### 4.0.28
+ * Update library versions.
+ * Add wildfly module deployer
+ * Remove all dependencies on other bedework projects - mostly by duplicating code.
+ * Make SplitName comparable and rename fields.
+
+### 4.1.0
+ * Update library versions.
+
+### 5.0.0
+ * Update library versions.
+ * Add more classifiers
+ * Build output in target/ then copy to final destination
+ * Add parameters so we can run the build to produce a set of modules appropriate for the wildfly galleon framework build.
+ * FUrther support for feature packs
+
+### 5.0.1
+ * iml changes only
+
+### 5.0.2
+ * Update library versions.
+ * Allow specification of optional module dependencies
+
+### 5.0.3
+ * Update library versions.
+ * Support classifier
+ * Remove unused properties, parameters and fields
+
+### 5.0.4
+ * Still had SNAPSHOT dependency when released. Thought that was invalid...
+
     
