@@ -26,7 +26,7 @@ public class DeployEars extends AbstractMojo {
   @Parameter
   private String inUrl;
 
-  @Parameter(required = true)
+  @Parameter
   private String deployDirPath;
 
   @Parameter
