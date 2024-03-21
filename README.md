@@ -87,4 +87,7 @@ For full details, see [Sonatype's documentation for using Maven to publish relea
 ### 5.0.4
  * Still had SNAPSHOT dependency when released. Thought that was invalid...
 
+### 5.0.4
+ * Revert a change which broke deployment.
+
     
