@@ -127,8 +127,6 @@ public class Runnable {
         pe.setBaseDirPath(args.next());
       } else if (args.ifMatch("--out")) {
         pe.setOutDirPath(args.next());
-      } else if (args.ifMatch("--props")) {
-        pe.setPropsPath(args.next());
       } else if (args.ifMatch("--noclean")) {
         pe.setCleanup(false);
       } else if (args.ifMatch("--noversion")) {
@@ -156,11 +154,6 @@ public class Runnable {
 
     if (pe.getBaseDirPath() == null) {
       usage("Must specify --baseDir");
-      return false;
-    }
-
-    if (pe.getPropsPath() == null) {
-      usage("Must specify --props");
       return false;
     }
 

@@ -21,12 +21,13 @@ public class War extends DeployableResource implements Updateable {
              final String path,
              final SplitName sn,
              final ApplicationXml appXml,
+             final boolean warsOnly,
              final PropertiesChain props,
              final String filterPrefix) throws Throwable {
     super(utils, path, sn, props, filterPrefix + sn.getArtifactId() + ".");
 
-    warsonly = Boolean.valueOf(props.get(Process.propWarsOnly));
     this.appXml = appXml;
+    this.warsonly = warsOnly;
 
     final File meta = utils.subDirectory(theFile, "META-INF", false);
     if (!meta.exists()) {
@@ -51,7 +52,6 @@ public class War extends DeployableResource implements Updateable {
     utils.debug("Update war " + getSplitName());
 
     copyDocs();
-    copyResources();
     processWsdls();
 
     if (warsonly) {
@@ -89,57 +89,6 @@ public class War extends DeployableResource implements Updateable {
     utils.debug("Copy from " + inPath + " to " + outPath);
 
     utils.copy(inPath, outPath, true, props);
-  }
-
-  private void copyResources() throws Throwable {
-    /*
-    if (utils.debug()) {
-      utils.debug("before push");
-      for (final String pname : props.topNames()) {
-        utils.debug(pname);
-      }
-    }
-    */
-    props.pushFiltered("app.copy.resource.", "copy.");
-
-    /*
-    if (utils.debug()) {
-      utils.debug("after push");
-      for (final String pname : props.topNames()) {
-        utils.debug(pname);
-      }
-    }
-    */
-    try {
-      for (final String pname: props.topNames()) {
-        final String toName = pname.substring("copy.".length());
-        final String fromName = props.get(pname);
-
-        final Path outPath =
-                Paths.get(props.get("org.bedework.server.resource.root.dir"),
-                          toName);
-
-        final Path inPath =
-                Paths.get(props.get("org.bedework.postdeploy.resource.base"),
-                          fromName);
-
-        final File outFile = outPath.toFile();
-
-        if (outFile.exists()) {
-          utils.deleteAll(outPath);
-        }
-        
-        if (!outFile.mkdirs()) {
-          utils.error("Unable to create output directory " + outPath);
-        }
-
-        utils.info("Copy " + inPath + " to " + outPath);
-
-        utils.copy(inPath, outPath, false, props);
-      }
-    } finally {
-      props.pop();
-    }
   }
 
   private void processWsdls() throws Throwable {

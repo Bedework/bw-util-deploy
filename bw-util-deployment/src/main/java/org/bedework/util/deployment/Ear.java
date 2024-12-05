@@ -18,13 +18,14 @@ public class Ear extends DeployableResource implements Updateable {
   public Ear(final Utils utils,
              final String path,
              final SplitName sn,
+             final boolean forWildfly,
              final PropertiesChain props) throws Throwable {
     super(utils, path, sn, props, "org.bedework.app." +
             sn.getArtifactId() + ".");
 
     final File earMeta = utils.subDirectory(theFile, "META-INF", true);
 
-    if (Boolean.parseBoolean(props.get("org.bedework.for.wildfly"))) {
+    if (forWildfly) {
       final File jbossService = utils.file(earMeta,
                                            "jboss-service.xml",
                                            false);
@@ -54,7 +55,9 @@ public class Ear extends DeployableResource implements Updateable {
 
       final War war = new War(utils,
                               theFile.getAbsolutePath(),
-                              wsn, appXml, this.props,
+                              wsn, appXml,
+                              false,
+                              this.props,
                               "app.");
 
       wars.put(wsn.getName(), war);
@@ -131,7 +134,8 @@ public class Ear extends DeployableResource implements Updateable {
 
     final War newWar = new War(utils,
                                theFile.getAbsolutePath(),
-                               toSn, appXml, props, "app.");
+                               toSn, appXml,
+                               false, props, "app.");
 
     wars.put(toSn.getName(), newWar);
 

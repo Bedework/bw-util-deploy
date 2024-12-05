@@ -121,16 +121,14 @@ public class SplitName implements Comparable<SplitName> {
   }
 
   public static SplitName testName(final String name,
-                                   final List<String> artifactIds) {
-    for (final String artifactId: artifactIds) {
-      if (name.startsWith(artifactId) &&
-              // Next char must be "-"
-              (name.charAt(artifactId.length()) == '-')) {
-        final int dotPos = name.lastIndexOf(".");
+                                   final String specificName) {
+    if (name.startsWith(specificName) &&
+            // Next char must be "-"
+            (name.charAt(specificName.length()) == '-')) {
+      final int dotPos = name.lastIndexOf(".");
 
-        if (dotPos > artifactId.length()) {
-          return new SplitName(name, artifactId);
-        }
+      if (dotPos > specificName.length()) {
+        return new SplitName(name, specificName);
       }
     }
 

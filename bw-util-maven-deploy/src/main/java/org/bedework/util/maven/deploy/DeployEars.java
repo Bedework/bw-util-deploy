@@ -23,6 +23,7 @@ public class DeployEars extends AbstractMojo {
   @Parameter(required = true)
   private String baseDirPath;
 
+  // Set to deploy from remote resource (untested)
   @Parameter
   private String inUrl;
 
@@ -42,6 +43,9 @@ public class DeployEars extends AbstractMojo {
   private boolean delete;
 
   @Parameter(defaultValue = "true")
+  private boolean forWildfly;
+
+  @Parameter(defaultValue = "true")
   private boolean cleanup;
 
   @Parameter
@@ -52,9 +56,6 @@ public class DeployEars extends AbstractMojo {
 
   @Parameter
   private String resourcesBase;
-
-  @Parameter(required = true)
-  private String propsPath;
 
   public DeployEars() {
 
@@ -73,13 +74,13 @@ public class DeployEars extends AbstractMojo {
     pe.setOutDirPath(target.toPath().resolve("modified").toString());
     pe.setDeployDirPath(deployDirPath);
     pe.setArgDebug(debug);
+    pe.setForWildfly(forWildfly);
     pe.setNoversion(noversion);
     pe.setCheckonly(checkonly);
     pe.setDelete(delete);
     pe.setCleanup(cleanup);
     pe.setEarName(earName);
     pe.setWarName(warName);
-    pe.setPropsPath(propsPath);
 
     pe.execute();
   }

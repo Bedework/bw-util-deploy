@@ -9,18 +9,14 @@ import org.apache.maven.plugin.MojoFailureException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -41,17 +37,6 @@ import static org.bedework.util.deployment.NetUtil.DavChild;
  * @author douglm
  */
 public class Process extends AbstractMojo {
-  /** The path of directory containing the appserver
-   * This is the value of the baseDir parameter
-   */
-  public static final String propBaseDir =
-          "org.bedework.global.baseDir";
-
-  /** True if we are processing wars rather than ear files.
-   * In this case the war will probably have its own lib */
-  public static final String propWarsOnly =
-          "org.bedework.global.warsonly";
-
   private String errorMsg;
 
   private String baseDirPath;
@@ -65,6 +50,8 @@ public class Process extends AbstractMojo {
   private String deployDirPath;
 
   private boolean argDebug;
+
+  private boolean forWildfly = true;
 
   private boolean noversion;
 
@@ -89,22 +76,6 @@ public class Process extends AbstractMojo {
   private final PropertiesChain pc = new PropertiesChain();
 
   private final List<Path> tempDirs = new ArrayList<>();
-
-  private void loadProperties() throws Throwable {
-    utils.info("*********************************************" +
-                       "Properties file: " + propsPath);
-    final File f = utils.file(propsPath);
-
-    final FileReader fr = new FileReader(f);
-
-    props = new Properties();
-
-    props.load(fr);
-
-    props.setProperty(propWarsOnly, String.valueOf(warsonly));
-
-    props.setProperty(propBaseDir, baseDirPath);
-  }
 
   public void setBaseDirPath(final String val) {
     baseDirPath = val;
@@ -142,6 +113,10 @@ public class Process extends AbstractMojo {
     argDebug = val;
   }
 
+  public void setForWildfly(final boolean val) {
+    forWildfly = val;
+  }
+
   public void setWarsOnly(final boolean val) {
     warsonly = val;
   }
@@ -171,14 +146,6 @@ public class Process extends AbstractMojo {
     setWarsOnly(warName != null);
   }
 
-  public void setPropsPath(final String val) {
-    propsPath = val;
-  }
-
-  public String getPropsPath() {
-    return propsPath;
-  }
-
   public void execute() throws MojoFailureException {
     utils = new Utils(getLog());
 
@@ -187,30 +154,22 @@ public class Process extends AbstractMojo {
     }
 
     try {
-      loadProperties();
+      // push an empty properties file until we fix things
+      pc.push(new Properties());
 
-      pc.push(props);
-
-      inUrl = defaultVal(inUrl,
-                         "org.bedework.postdeploy.inurl");
-
-      if (inUrl == null) {
-        inDirPath = defaultVal(inDirPath,
-                               "org.bedework.postdeploy.in",
-                               "--in");
-      } else {
+      if (inUrl != null) {
         inDirPath = getRemoteFiles(inUrl);
         if (inDirPath == null) {
           return;
         }
       }
 
-      outDirPath = defaultVal(outDirPath,
-                              "org.bedework.postdeploy.out",
-                              "--out");
-
-      deployDirPath = defaultVal(deployDirPath,
-                                 "org.bedework.postdeploy.deploy");
+      if (deployDirPath == null) {
+        if (!forWildfly) {
+          throw new MojoFailureException("No path specified for non-wildfly deployment");
+        }
+        deployDirPath = baseDirPath + "/wildfly/standalone/deployments";
+      }
 
       if (errorMsg != null) {
         throw new MojoFailureException(errorMsg);
@@ -271,11 +230,7 @@ public class Process extends AbstractMojo {
       utils.info("earName: " + earName);
     }
 
-    final List<String> earNames =
-            pc.listProperty("org.bedework.ear.names");
-
     final List<PathAndName> toProcess = buildUpdateableList(earName,
-                                                            earNames,
                                                             "ear");
     if (toProcess == null) {
       return;
@@ -284,7 +239,7 @@ public class Process extends AbstractMojo {
     final List<Updateable> toUpdate = new ArrayList<>();
 
     for (final PathAndName pan: toProcess) {
-      toUpdate.add(new Ear(utils, pan.getPath(), pan.getSplitName(), pc));
+      toUpdate.add(new Ear(utils, pan.getPath(), pan.getSplitName(), forWildfly, pc));
     }
 
     if (checkonly) {
@@ -303,11 +258,7 @@ public class Process extends AbstractMojo {
       utils.info("warName: " + warName);
     }
 
-    final List<String> warNames =
-            pc.listProperty("org.bedework.war.names");
-
     final List<PathAndName> toProcess = buildUpdateableList(warName,
-                                                            warNames,
                                                             "war");
     if (toProcess == null) {
       return;
@@ -318,7 +269,9 @@ public class Process extends AbstractMojo {
     for (final PathAndName pan: toProcess) {
       toUpdate.add(new War(utils,
                            pan.getPath(),
-                           pan.getSplitName(), null, pc,
+                           pan.getSplitName(), null,
+                           warsonly,
+                           pc,
                            "org.bedework.app."));
     }
 
@@ -334,17 +287,12 @@ public class Process extends AbstractMojo {
   }
 
   private List<PathAndName> buildUpdateableList(
-          final String specificNames,
-          final List<String> allowedNames,
+          final String specificName,
           final String suffix) throws Throwable {
-    utils.info("Specific names = " + specificNames);
-    final Set<String> names = new TreeSet<>(
-            Arrays.asList(specificNames.split(",")));
-
-    utils.info("List of names = " + String.join(",", names));
+    utils.info("Specific name = " + specificName);
 
     final List<SplitName> splitNames = getInFiles(inDirPath,
-                                                  allowedNames,
+                                                  specificName,
                                                   suffix);
     if (splitNames == null) {
       utils.error("No names available. Terminating");
@@ -361,11 +309,10 @@ public class Process extends AbstractMojo {
     final List<PathAndName> files = new ArrayList<>();
 
     for (final SplitName sn: splitNames) {
-      if (!names.contains(sn.getArtifactId())) {
+      if (!specificName.equals(sn.getArtifactId())) {
         // We were given a specific name and this isn't it
-        utils.warn("Prefix " + sn.getArtifactId() +
-                           " for file " + sn.getName() +
-                           " not in properties as deployable file. Skipping");
+        utils.warn("Skipping Prefix " + sn.getArtifactId() +
+                           " for file " + sn.getName());
         continue;
       }
 
@@ -375,11 +322,6 @@ public class Process extends AbstractMojo {
           utils.warn("File " + sn.getName() + " not later than deployed file. Skipping");
           continue;
         }
-      }
-
-      if (!allowedNames.contains(sn.getArtifactId())) {
-        utils.warn(sn.getName() + " is not in the list of supported files. Skipped");
-        continue;
       }
 
       if (checkonly) {
@@ -421,8 +363,7 @@ public class Process extends AbstractMojo {
 
     int deployed = 0;
 
-    final boolean wildfly = Boolean.valueOf(pc.get("org.bedework.for.wildfly"));
-    if (wildfly) {
+    if (forWildfly) {
       utils.info("Processing for wildfly");
     }
 
@@ -442,7 +383,7 @@ public class Process extends AbstractMojo {
         }
       }
 
-      if (wildfly) {
+      if (forWildfly) {
         // Remove any deployment directive files
         Path thePath = Paths.get(deployDirPath, sn.getName() + ".failed");
         File theFile = thePath.toFile();
@@ -476,7 +417,7 @@ public class Process extends AbstractMojo {
       final Path outPath = Paths.get(outDirPath, sn.getName());
       utils.copy(outPath, deployPath, false, null);
 
-      if (wildfly) {
+      if (forWildfly) {
         final File doDeploy = Paths.get(deployDirPath,
                                         sn.getName() + ".dodeploy").toFile();
         if (!doDeploy.createNewFile()) {
@@ -616,12 +557,12 @@ public class Process extends AbstractMojo {
    * all files are returned.
    *
    * @param dirPath the directory
-   * @param allowedNames names must be in this list
+   * @param specificName we are deploying
    * @return split names of located files.
    * @throws Throwable
    */
   private List<SplitName> getInFiles(final String dirPath,
-                                     final List<String> allowedNames,
+                                     final String specificName,
                                      final String suffix) throws Throwable {
     final File inDir = utils.directory(dirPath);
 
@@ -636,7 +577,7 @@ public class Process extends AbstractMojo {
 
     for (final String nm: names) {
       utils.debug("Name: " + nm);
-      final SplitName sn = SplitName.testName(nm, allowedNames);
+      final SplitName sn = SplitName.testName(nm, specificName);
 
       // Allow for a generated ear without a suffix (maven plugin)
       utils.debug("Split name: " + sn);
@@ -684,30 +625,5 @@ public class Process extends AbstractMojo {
     }
 
     return splitNames;
-  }
-
-  private String defaultVal(final String val,
-                            final String pname) {
-    if (val != null) {
-      return val;
-    }
-
-    return pc.get(pname);
-  }
-
-  private String defaultVal(final String val,
-                                   final String pname,
-                                   final String argName) {
-    final String nval = defaultVal(val, pname);
-    if (nval != null) {
-      return nval;
-    }
-
-    errorMsg = "Must specify " + argName +
-                        " or provide the value in the properties with the" +
-                        " '" + pname + "' property";
-    utils.error(errorMsg);
-
-    return null;
   }
 }
