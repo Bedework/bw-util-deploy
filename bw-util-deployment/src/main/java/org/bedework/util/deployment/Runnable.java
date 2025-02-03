@@ -139,8 +139,8 @@ public class Runnable {
         pe.setEarName(args.next());
       } else if (args.ifMatch("--war")) {
         pe.setWarName(args.next());
-      } else if (args.ifMatch("--warsonly")) {
-        pe.setWarsOnly(true);
+      } else if (args.ifMatch("--noears")) {
+        pe.setNoEars(true);
       } else if (args.ifMatch("--debug")) {
         debug = true;
       } else if (args.ifMatch("--h")) {

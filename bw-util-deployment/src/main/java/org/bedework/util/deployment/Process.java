@@ -15,6 +15,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
@@ -57,11 +59,13 @@ public class Process extends AbstractMojo {
 
   private boolean checkonly;
 
-  private boolean warsonly;
+  private boolean noEars;
 
   private boolean delete;
 
   private boolean cleanup = true;
+
+  private String sarName;
 
   private String warName;
 
@@ -117,8 +121,8 @@ public class Process extends AbstractMojo {
     forWildfly = val;
   }
 
-  public void setWarsOnly(final boolean val) {
-    warsonly = val;
+  public void setNoEars(final boolean val) {
+    noEars = val;
   }
 
   public void setNoversion(final boolean val) {
@@ -143,8 +147,16 @@ public class Process extends AbstractMojo {
 
   public void setWarName(final String val) {
     warName = val;
-    setWarsOnly(warName != null);
+    setNoEars(warName != null);
   }
+
+  public void setSarName(final String val) {
+    sarName = val;
+    setNoEars(sarName != null);
+  }
+
+  private static Collection<String> validSuffices =
+          Arrays.asList("ear", "sar", "war");
 
   public void execute() throws MojoFailureException {
     utils = new Utils(getLog());
@@ -187,8 +199,7 @@ public class Process extends AbstractMojo {
 
       for (final SplitName sn: getDeployedNames(deployDirPath,
                                                 null)) {
-        if (!"war".equals(sn.getType()) && !"ear".equals(
-                sn.getType())) {
+        if (!validSuffices.contains(sn.getType())) {
           continue;
         }
 
@@ -203,10 +214,14 @@ public class Process extends AbstractMojo {
                               sn.getVersion());
       }
 
-      if (!warsonly) {
+      if (earName != null) {
         processEars();
-      } else {
+      } else if (warName != null) {
         processWars();
+      } else if (sarName != null) {
+        processSars();
+      } else {
+        throw new MojoFailureException("No ear/war/sar name specified");
       }
 
     } catch (final Throwable t) {
@@ -270,7 +285,7 @@ public class Process extends AbstractMojo {
       toUpdate.add(new War(utils,
                            pan.getPath(),
                            pan.getSplitName(), null,
-                           warsonly,
+                           noEars,
                            pc,
                            "org.bedework.app."));
     }
@@ -284,6 +299,39 @@ public class Process extends AbstractMojo {
     }
 
     deployFiles("war");
+  }
+
+  private void processSars() throws Throwable {
+    if (sarName != null) {
+      utils.info("sarName: " + sarName);
+    }
+
+    final List<PathAndName> toProcess =
+            buildUpdateableList(sarName, "sar");
+    if (toProcess == null) {
+      return;
+    }
+
+    final List<Updateable> toUpdate = new ArrayList<>();
+
+    for (final PathAndName pan: toProcess) {
+      toUpdate.add(new Sar(utils,
+                           pan.getPath(),
+                           pan.getSplitName(), null,
+                           noEars,
+                           pc,
+                           "org.bedework.app."));
+    }
+
+    if (checkonly) {
+      return;
+    }
+
+    for (final Updateable upd: toUpdate) {
+      upd.update();
+    }
+
+    deployFiles("sar");
   }
 
   private List<PathAndName> buildUpdateableList(

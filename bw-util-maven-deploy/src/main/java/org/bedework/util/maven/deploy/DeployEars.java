@@ -55,6 +55,9 @@ public class DeployEars extends AbstractMojo {
   private String warName;
 
   @Parameter
+  private String sarName;
+
+  @Parameter
   private String resourcesBase;
 
   public DeployEars() {
@@ -64,10 +67,20 @@ public class DeployEars extends AbstractMojo {
   public void execute() throws MojoFailureException {
     final Process pe = new Process();
 
-    if (((warName == null) && (earName == null)) ||
-        ((warName != null) && (earName != null))) {
-      throw new MojoFailureException("Exactly one of earName or warName is required");
+    int numFound = 0;
+    if (earName != null) {
+      numFound++;
     }
+    if (warName != null) {
+      numFound++;
+    }
+    if (sarName != null) {
+      numFound++;
+    }
+    if (numFound != 1) {
+      throw new MojoFailureException("Exactly one of earName, sarName or warName is required");
+    }
+
     pe.setBaseDirPath(baseDirPath);
     pe.setInUrl(inUrl);
     pe.setInDirPath(target.getAbsolutePath());
@@ -80,6 +93,7 @@ public class DeployEars extends AbstractMojo {
     pe.setDelete(delete);
     pe.setCleanup(cleanup);
     pe.setEarName(earName);
+    pe.setSarName(sarName);
     pe.setWarName(warName);
 
     pe.execute();
