@@ -87,7 +87,14 @@ For full details, see [Sonatype's documentation for using Maven to publish relea
 ### 5.0.4
  * Still had SNAPSHOT dependency when released. Thought that was invalid...
 
-### 5.0.4
+### 5.0.5
  * Revert a change which broke deployment.
 
-    
+### 5.0.6
+ * Update parent - avoid some maven dependencies
+
+### 5.1.0
+ * Deployment no longer requires a property file. All defaults are for a standalone wildfly. Should be possible to override the defaults.
+ * Last pre-jakarta release
+
+
