@@ -94,7 +94,11 @@ For full details, see [Sonatype's documentation for using Maven to publish relea
  * Update parent - avoid some maven dependencies
 
 ### 5.1.0
+ * Update parent
+
+### 5.1.1
  * Deployment no longer requires a property file. All defaults are for a standalone wildfly. Should be possible to override the defaults.
+ * Update parent
  * Last pre-jakarta release
 
 
