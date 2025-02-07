@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.bedework</groupId>
     <artifactId>bedework-parent</artifactId>
-    <version>92-SNAPSHOT</version>
+    <version>200-SNAPSHOT</version>
   </parent>
 
   <artifactId>bw-util-deploy</artifactId>
