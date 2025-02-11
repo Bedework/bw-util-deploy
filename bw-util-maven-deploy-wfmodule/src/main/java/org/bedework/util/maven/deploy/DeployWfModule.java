@@ -152,6 +152,7 @@ public class DeployWfModule extends AbstractMojo {
       if (artifact == null) {
         artifact = new FileInfo(model.getGroupId(),
                                 model.getArtifactId(),
+                                null,
                                 model.getVersion(),
                                 "jar",
                                 null);
@@ -296,13 +297,11 @@ public class DeployWfModule extends AbstractMojo {
                                      final List<FileArtifact> artifacts)
           throws MojoFailureException {
     List<SplitName> moduleFiles =
-            utils.getFiles(getPathToModuleMain(moduleName),
-                           null);
+            utils.getFiles(getPathToModuleMain(moduleName));
 
     if (moduleFiles == null) {
       moduleFiles =
-              utils.getFiles(getPathToSystemModuleMain(moduleName),
-                             null);
+              utils.getFiles(getPathToSystemModuleMain(moduleName));
     }
 
     if (moduleFiles == null) {
@@ -349,7 +348,7 @@ public class DeployWfModule extends AbstractMojo {
       Files.createDirectories(pathToModuleMain);
 
       final List<SplitName> resourceFiles =
-              utils.getFiles(pathToModuleMain, null);
+              utils.getFiles(pathToModuleMain);
 
       // Copy in the module.xml template
       final Path xmlPath = pathToModuleMain.resolve("module.xml");
@@ -575,7 +574,8 @@ public class DeployWfModule extends AbstractMojo {
                                      final FileInfo fileInfo)
           throws MojoFailureException {
     return matchFiles(utils.getFiles(pathToFile,
-                                     fileInfo.getArtifactId()),
+                                     fileInfo.getArtifactId(),
+                                     fileInfo.getClassifier()),
                      fileInfo);
   }
 

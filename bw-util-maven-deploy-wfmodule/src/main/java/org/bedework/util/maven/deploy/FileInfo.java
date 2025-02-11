@@ -3,6 +3,8 @@
 */
 package org.bedework.util.maven.deploy;
 
+import org.bedework.util.deployment.SplitName;
+
 import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -23,6 +25,9 @@ public class FileInfo implements Comparable<FileInfo> {
   private String artifactId;
 
   @Parameter
+  private String classifier;
+
+  @Parameter
   private String version;
 
   @Parameter(defaultValue = "jar")
@@ -34,14 +39,20 @@ public class FileInfo implements Comparable<FileInfo> {
 
   FileInfo(final String groupId,
            final String artifactId,
+           final String classifier,
            final String version,
            final String type,
            final String repository) {
     this.groupId = groupId;
     this.artifactId = artifactId;
+    this.classifier = classifier;
     this.version = version;
     this.type = type;
     this.repository = repository;
+
+    if (classifier != null) {
+      SplitName.addClassifier(classifier);
+    }
   }
 
   String getGroupId() {
@@ -50,6 +61,10 @@ public class FileInfo implements Comparable<FileInfo> {
 
   String getArtifactId() {
     return artifactId;
+  }
+
+  public String getClassifier() {
+    return classifier;
   }
 
   String getVersion() {

@@ -35,12 +35,14 @@ public class JarDependency extends FileInfo {
   JarDependency(final String moduleName,
                 final String groupId,
                 final String artifactId,
+                final String classifier,
                 final String version,
                 final String type,
                 final String repository,
                 final List<JarDependency> jarDependencies,
                 final List<ModuleDependency> moduleDependencies) {
-    super(groupId, artifactId, version, type, repository);
+    super(groupId, artifactId, classifier,
+          version, type, repository);
     this.moduleName = moduleName;
     this.jarDependencies = jarDependencies;
     this.moduleDependencies = moduleDependencies;
@@ -54,6 +56,7 @@ public class JarDependency extends FileInfo {
     return new JarDependency(moduleName,
                              fileInfo.getGroupId(),
                              fileInfo.getArtifactId(),
+                             fileInfo.getClassifier(),
                              fileInfo.getVersion(),
                              fileInfo.getType(),
                              repository,
@@ -65,6 +68,7 @@ public class JarDependency extends FileInfo {
                                      final List<JarDependency> jarDependencies,
                                      final List<ModuleDependency> moduleDependencies) {
     return new JarDependency(moduleName,
+                             null,
                              null,
                              null,
                              null,

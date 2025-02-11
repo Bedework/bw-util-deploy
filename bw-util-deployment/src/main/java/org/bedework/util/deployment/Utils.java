@@ -49,6 +49,7 @@ import java.util.Properties;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import static java.lang.String.format;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.TERMINATE;
 import static java.nio.file.StandardCopyOption.COPY_ATTRIBUTES;
@@ -418,11 +419,18 @@ public class Utils {
           "_remote.repositories",
           "resolver-status.properties");
 
+  public List<SplitName> getFiles(final Path pathToFile)
+          throws MojoFailureException {
+    return getFiles(pathToFile, null, null);
+  }
   public List<SplitName> getFiles(final Path pathToFile,
-                                  final String artifactId)
+                                  final String artifactId,
+                                  final String classifier)
           throws MojoFailureException {
     final File dir = pathToFile.toFile();
-    debug("Get names from dir " + dir);
+    debug(format("Get names from dir %s - " +
+                         "artifactId %s, classifier %s",
+                 dir, artifactId, classifier));
     final String[] names;
     try {
       names = dir.list();
@@ -466,6 +474,11 @@ public class Utils {
       }
 
       if (sn.getVersion().endsWith("-javadoc")) {
+        continue;
+      }
+
+      if ((classifier != null) &&
+              !sn.getVersion().endsWith("-" + classifier)) {
         continue;
       }
 

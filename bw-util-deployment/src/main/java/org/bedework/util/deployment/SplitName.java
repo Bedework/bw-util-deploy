@@ -38,6 +38,7 @@ public class SplitName implements Comparable<SplitName> {
   private final String name;
 
   private final String artifactId;
+  private String classifier;
   private String version;
   private String type;
 
@@ -75,10 +76,15 @@ public class SplitName implements Comparable<SplitName> {
                         "-GA.",
                         "-javadoc.",
                         "-jre.",
+                        "-jakarta.",
                         "-tests.",
                         ".0-1.",
                         ".0-1.",
                         "-min.");
+
+  public static void addClassifier(final String val) {
+    classifiers.add(val);
+  }
 
   /** Tries to figure out what the artifactId is for the name and then
    * splits it. Assumes we have a "-" in the name.
