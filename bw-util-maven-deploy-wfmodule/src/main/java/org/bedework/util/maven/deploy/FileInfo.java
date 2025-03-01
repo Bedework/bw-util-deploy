@@ -76,6 +76,9 @@ public class FileInfo implements Comparable<FileInfo> {
   }
 
   String getType() {
+    if (type == null) {
+      return "jar";
+    }
     return type;
   }
 
@@ -128,17 +131,13 @@ public class FileInfo implements Comparable<FileInfo> {
                 .resolve(getVersion());
   }
 
-  public void toStringSegment(final StringBuilder sb) {
-    sb.append("repository=");
-    sb.append(getRepository());
-    sb.append(", groupId=");
-    sb.append(getGroupId());
-    sb.append(", artifactId=");
-    sb.append(getArtifactId());
-    sb.append(", version=");
-    sb.append(getVersion());
-    sb.append(", type=");
-    sb.append(getType());
+  public StringBuilder toStringSegment(final StringBuilder sb) {
+    return sb.append("repository=").append(getRepository())
+             .append(", groupId=").append(getGroupId())
+             .append(", artifactId=").append(getArtifactId())
+             .append(", classifier=").append(getClassifier())
+             .append(", version=").append(getVersion())
+             .append(", type=").append(getType());
   }
 
   @Override
@@ -168,13 +167,11 @@ public class FileInfo implements Comparable<FileInfo> {
   }
 
   public String toString() {
-    final StringBuilder sb = new StringBuilder(
-            this.getClass().getSimpleName());
+    final var sb = new StringBuilder(getClass().getSimpleName());
 
     sb.append("{");
-    toStringSegment(sb);
-    sb.append("}");
-
-    return sb.toString();
+    return toStringSegment(sb)
+            .append("}")
+            .toString();
   }
 }

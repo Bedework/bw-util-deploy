@@ -448,12 +448,13 @@ public class Utils {
 
     for (final String nm: names) {
       if (skipNames.contains(nm) ||
-              nm.startsWith("maven-metadata")) {
+              nm.startsWith("maven-metadata") ||
+              nm.endsWith("lastUpdated") ||
+              nm.endsWith("sha1")) {
         debug("Skipped " + nm);
         continue;
       }
 
-      debug("Found " + nm);
       final SplitName sn;
       if (artifactId == null) {
         sn = SplitName.testName(nm);
@@ -466,19 +467,16 @@ public class Utils {
         continue;
       }
 
-      // Should we skip?
-      if (nm.endsWith("-sources.jar") ||
-              nm.endsWith(".sha1") ||
-              nm.endsWith(".pom")) {
-        continue;
-      }
+      debug(format("Found %s, %s", nm, sn));
 
-      if (sn.getVersion().endsWith("-javadoc")) {
+      // Should we skip?
+      if ("sources".equals(sn.getClassifier()) ||
+              "javadoc".equals(sn.getClassifier())) {
         continue;
       }
 
       if ((classifier != null) &&
-              !sn.getVersion().endsWith("-" + classifier)) {
+              !classifier.equals(sn.getClassifier())) {
         continue;
       }
 

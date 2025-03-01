@@ -17,6 +17,7 @@ package org.bedework.util.deployment;
 
 import org.apache.maven.artifact.versioning.ComparableVersion;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -55,10 +56,14 @@ public class SplitName implements Comparable<SplitName> {
     final int dotPos = name.lastIndexOf(".");
 
     if (dotPos > 0) {
-      version = name.substring(dashPos + 1, dotPos);
+      final var vc = getVersionClassifier(name.substring(dashPos + 1, dotPos));
+      version = vc.version();
+      classifier = vc.classifier();
       type = name.substring(dotPos + 1);
     } else {
-      version = name.substring(dashPos + 1);
+      final var vc = getVersionClassifier(name.substring(dashPos + 1));
+      version = vc.version();
+      classifier = vc.classifier();
     }
   }
 
@@ -67,23 +72,29 @@ public class SplitName implements Comparable<SplitName> {
             final String version,
             final String type) {
     this(name, artifactId);
-    this.version = version;
+    final var vc = getVersionClassifier(version);
+    this.version = vc.version();
+    classifier = vc.classifier();
     this.type = type;
   }
 
   public static List<String> classifiers =
-          Arrays.asList("-SNAPSHOT.",
-                        "-GA.",
-                        "-javadoc.",
-                        "-jre.",
-                        "-jakarta.",
-                        "-tests.",
-                        ".0-1.",
-                        ".0-1.",
-                        "-min.");
+          new ArrayList<>(Arrays.asList(
+                  "-SNAPSHOT.",
+                  "-GA.",
+                  "-javadoc.",
+                  "-jre.",
+                  "-jakarta.",
+                  "-sources.",
+                  "-tests.",
+                  ".0-1.",
+                  ".0-1.",
+                  "-min."));
 
   public static void addClassifier(final String val) {
-    classifiers.add(val);
+    if (!classifiers.contains(val)) {
+      classifiers.add(val);
+    }
   }
 
   /** Tries to figure out what the artifactId is for the name and then
@@ -197,6 +208,9 @@ public class SplitName implements Comparable<SplitName> {
   }
 
   public String getType() {
+    if (type == null) {
+      return "jar";
+    }
     return type;
   }
 
@@ -204,31 +218,34 @@ public class SplitName implements Comparable<SplitName> {
     return name;
   }
 
+  public String getClassifier() {
+    return classifier;
+  }
+
   public String getVersion() {
     return version;
   }
 
-  public String getVersionWithoutClassifier() {
-    if (version == null) {
-      return null;
+  private record VersionClassifier(String version,
+                                   String classifier) {}
+
+  public VersionClassifier getVersionClassifier(final String val) {
+    if (val == null) {
+      return new VersionClassifier(null, null);
     }
 
-    final int index = version.lastIndexOf("-");
+    final int index = val.lastIndexOf("-");
 
     if (index < 0) {
-      return version;
+      return new VersionClassifier(val, null);
     }
 
-    return version.substring(0, index);
+    return new VersionClassifier(val.substring(0, index),
+                                 val.substring(index + 1));
   }
 
   @Override
   public int compareTo(final SplitName that) {
-    return compareTo(that, true);
-  }
-
-  public int compareTo(final SplitName that,
-                       final boolean includeClassifier) {
     int res = compareStrings(getArtifactId(),
                              that.getArtifactId());
     if (res != 0) {
@@ -241,41 +258,31 @@ public class SplitName implements Comparable<SplitName> {
       return res;
     }
 
-    if (!includeClassifier) {
-      return compareStrings(getVersionWithoutClassifier(),
-                            that.getVersionWithoutClassifier());
+    res = compareStrings(getVersion(),
+                         that.getVersion());
+    if (res != 0) {
+      return res;
     }
 
-    return compareStrings(getVersion(),
-                          that.getVersion());
+    return compareStrings(getClassifier(),
+                          that.getClassifier());
   }
 
   @Override
   public boolean equals(final Object o) {
-    return equals(o, true);
-  }
-
-  public boolean equals(final Object o,
-                        final boolean includeClassifier) {
-    if (!(o instanceof SplitName)) {
-      return false;
-    }
-
-    return compareTo((SplitName)o, includeClassifier) == 0;
+    return compareTo((SplitName)o) == 0;
   }
 
   public String toString() {
-    final StringBuilder sb = new StringBuilder(
-            this.getClass().getSimpleName());
-
-    sb.append("{");
-    sb.append("name=").append(getName());
-    sb.append(", artifactId=").append(artifactId);
-    sb.append(", version=").append(getVersion());
-    sb.append(", type=").append(getType());
-    sb.append("}");
-
-    return sb.toString();
+    return new StringBuilder(getClass().getSimpleName())
+            .append("{")
+            .append("name=").append(getName())
+            .append(", artifactId=").append(artifactId)
+            .append(", classifier=").append(getClassifier())
+            .append(", version=").append(getVersion())
+            .append(", type=").append(getType())
+            .append("}")
+            .toString();
   }
 }
 

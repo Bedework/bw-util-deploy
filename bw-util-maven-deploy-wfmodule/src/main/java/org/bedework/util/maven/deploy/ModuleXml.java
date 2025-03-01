@@ -83,10 +83,18 @@ public class ModuleXml extends XmlFile {
     }
 
     final Element resNode = doc.createElement("artifact");
-    resNode.setAttribute("name",
-                         String.format("${%s:%s}",
-                                       resource.getGroupId(),
-                                       resource.getArtifactId()));
+    if (resource.getClassifier() != null) {
+      resNode.setAttribute("name",
+                           String.format("${%s:%s::%s}",
+                                         resource.getGroupId(),
+                                         resource.getArtifactId(),
+                                         resource.getClassifier()));
+    } else {
+      resNode.setAttribute("name",
+                           String.format("${%s:%s}",
+                                         resource.getGroupId(),
+                                         resource.getArtifactId()));
+    }
 
     el.appendChild(resNode);
   }

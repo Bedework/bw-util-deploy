@@ -6,7 +6,7 @@ package org.bedework.util.maven.deploy;
 import org.bedework.util.deployment.SplitName;
 import org.bedework.util.deployment.Utils;
 
-import org.apache.maven.artifact.Artifact;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
@@ -137,7 +137,7 @@ public class DeployWfModule extends AbstractMojo {
 
     // Build a list of all dependencies
     // artifact.getFile()) needs requiresDependencyResolution
-    for (final Artifact artifact: project.getArtifacts()) {
+    for (final Dependency artifact: project.getDependencies()) {
       final FileArtifact fa = FileArtifact.from(artifact);
       utils.debug(format("WfModules: Adding dependency %s", fa));
       fileArtifacts.add(fa);
@@ -370,9 +370,8 @@ public class DeployWfModule extends AbstractMojo {
       final FileArtifact theArtifact = findArtifact(artifacts, fileInfo);
 
       if (theArtifact != null) {
-        utils.debug(format("Found artifact %s with file %s",
-                           theArtifact,
-                           theArtifact.getMavenArtifact().getFile()));
+        utils.debug(format("Found artifact %s",
+                           theArtifact));
       }
 
       if (!buildThin && (pathToFile != null)) {
@@ -491,9 +490,11 @@ public class DeployWfModule extends AbstractMojo {
       if (fns.isEmpty()) {
         throw new MojoFailureException(
                 format("Deployable jars are required. " +
-                               "None found at %s with name %s and type %s",
+                               "None found at %s with name %s " +
+                               "classifier %s and type %s",
                        pathToFile,
                        fileInfo.getArtifactId(),
+                       fileInfo.getClassifier(),
                        fileInfo.getType()));
       }
 
@@ -621,7 +622,7 @@ public class DeployWfModule extends AbstractMojo {
         continue;
       }
 
-      if (sn.getVersion().endsWith("-tests")) {
+      if ("tests".equals(sn.getClassifier())) {
         continue;
       }
 
@@ -630,7 +631,7 @@ public class DeployWfModule extends AbstractMojo {
       }
 
       for (final var file: res) {
-        if (!file.equals(sn, false)) {
+        if (!file.equals(sn)) {
           throw new MojoFailureException(
                   "One deployable module resource of given name " +
                           "and version is required. Already found: " + file);
